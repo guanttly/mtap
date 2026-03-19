@@ -1,0 +1,82 @@
+// Package po 基础设施层 - resource持久化对象（GORM Model）
+package po
+
+import "time"
+
+type DevicePO struct {
+	ID           string    `gorm:"column:id;primaryKey;size:36"`
+	Name         string    `gorm:"column:name;not null;size:100;index"`
+	CampusID     string    `gorm:"column:campus_id;size:36;index"`
+	DepartmentID string    `gorm:"column:department_id;size:36;index"`
+	Status       string    `gorm:"column:status;not null;size:10;default:active;index"`
+	CreatedAt    time.Time `gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt    time.Time `gorm:"column:updated_at;autoUpdateTime"`
+}
+
+func (DevicePO) TableName() string { return "devices" }
+
+type ExamItemPO struct {
+	ID          string    `gorm:"column:id;primaryKey;size:36"`
+	Name        string    `gorm:"column:name;not null;size:100;uniqueIndex"`
+	DurationMin int       `gorm:"column:duration_min;not null"`
+	IsFasting   bool      `gorm:"column:is_fasting;not null;default:false"`
+	FastingDesc string    `gorm:"column:fasting_desc;size:200"`
+	CreatedAt   time.Time `gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt   time.Time `gorm:"column:updated_at;autoUpdateTime"`
+}
+
+func (ExamItemPO) TableName() string { return "exam_items" }
+
+type ItemAliasPO struct {
+	ID        string    `gorm:"column:id;primaryKey;size:36"`
+	ExamItemID string   `gorm:"column:exam_item_id;not null;size:36;index"`
+	Alias     string    `gorm:"column:alias;not null;size:50;uniqueIndex"`
+	CreatedAt time.Time `gorm:"column:created_at;autoCreateTime"`
+}
+
+func (ItemAliasPO) TableName() string { return "item_aliases" }
+
+type SlotPoolPO struct {
+	ID        string    `gorm:"column:id;primaryKey;size:36"`
+	Name      string    `gorm:"column:name;not null;size:60;uniqueIndex"`
+	Type      string    `gorm:"column:type;not null;size:20"` // public/department/doctor
+	Status    string    `gorm:"column:status;not null;size:10;default:active;index"`
+	CreatedAt time.Time `gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt time.Time `gorm:"column:updated_at;autoUpdateTime"`
+}
+
+func (SlotPoolPO) TableName() string { return "slot_pools" }
+
+type SchedulePO struct {
+	ID        string    `gorm:"column:id;primaryKey;size:36"`
+	DeviceID  string    `gorm:"column:device_id;not null;size:36;index"`
+	Date      time.Time `gorm:"column:date;not null;index"` // 只使用日期部分
+	StartTime string    `gorm:"column:start_time;not null;size:5"` // HH:mm
+	EndTime   string    `gorm:"column:end_time;not null;size:5"`
+	Status    string    `gorm:"column:status;not null;size:15;default:normal;index"`
+	SuspendReason string `gorm:"column:suspend_reason;size:200"`
+	CreatedAt time.Time `gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt time.Time `gorm:"column:updated_at;autoUpdateTime"`
+}
+
+func (SchedulePO) TableName() string { return "schedules" }
+
+type TimeSlotPO struct {
+	ID              string     `gorm:"column:id;primaryKey;size:36"`
+	DeviceID         string     `gorm:"column:device_id;not null;size:36;index"`
+	Date            time.Time  `gorm:"column:date;not null;index"`
+	ExamItemID       string     `gorm:"column:exam_item_id;size:36;index"`
+	PoolType         string     `gorm:"column:pool_type;not null;size:15;default:public;index"`
+	StartAt          time.Time  `gorm:"column:start_at;not null;index"`
+	EndAt            time.Time  `gorm:"column:end_at;not null"`
+	StandardDuration int        `gorm:"column:standard_duration;not null;default:0"`
+	AdjustedDuration int        `gorm:"column:adjusted_duration;not null;default:0"`
+	Status           string     `gorm:"column:status;not null;size:15;default:available;index"`
+	LockedBy         string     `gorm:"column:locked_by;size:36;index"`
+	LockUntil        *time.Time `gorm:"column:lock_until;index"`
+	Remaining        int        `gorm:"column:remaining;not null;default:1"`
+	CreatedAt        time.Time  `gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt        time.Time  `gorm:"column:updated_at;autoUpdateTime"`
+}
+
+func (TimeSlotPO) TableName() string { return "time_slots" }
