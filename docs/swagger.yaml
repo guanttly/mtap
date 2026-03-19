@@ -1,0 +1,10 @@
+# MTAP API文档
+# 核心目的：OpenAPI 3.0 接口定义
+# 包含：各模块RESTful API的请求/响应/参数/错误码定义
+
+openapi: "3.0.0"
+info:
+  title: 一站式全医技预约平台 API
+  version: "1.0.0"
+paths: {}
+  # TODO: 按模块定义各接口

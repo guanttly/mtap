@@ -1,0 +1,13 @@
+# MTAP Docker Compose编排
+# 核心目的：本地开发与测试环境的容器编排
+# 包含：api-server, ws-server, sync-worker, scheduler, notify-worker,
+#       analyzer-worker, postgres, redis, rabbitmq, nginx
+
+version: "3.8"
+
+services:
+  # TODO: 各服务定义
+  api-server:
+    build:
+      context: ..
+      dockerfile: deployments/Dockerfile

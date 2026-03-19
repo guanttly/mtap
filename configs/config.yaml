@@ -1,0 +1,25 @@
+# MTAP 配置文件
+# 核心目的：应用运行时配置
+# 包含：数据库、Redis、MQ、外部系统、日志等配置项
+
+server:
+  port: 8080
+
+database:
+  driver: postgres
+  # TODO: 填充连接配置
+
+redis:
+  # TODO: 填充连接配置
+
+rabbitmq:
+  # TODO: 填充连接配置
+
+his:
+  # TODO: HIS系统对接配置
+
+payment:
+  # TODO: 收费系统对接配置
+
+message:
+  # TODO: 消息平台配置
