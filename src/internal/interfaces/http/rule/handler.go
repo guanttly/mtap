@@ -37,21 +37,25 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		adminOnly.POST("/conflicts", h.CreateConflictRule)
 		operatorPlus.GET("/conflicts", h.ListConflictRules)
 		operatorPlus.GET("/conflicts/:id", h.GetConflictRule)
+		adminOnly.PUT("/conflicts/:id", h.UpdateConflictRule)
 		adminOnly.DELETE("/conflicts/:id", h.DeleteConflictRule)
 
 		// 冲突包
 		adminOnly.POST("/conflict-packages", h.CreateConflictPackage)
 		operatorPlus.GET("/conflict-packages", h.ListConflictPackages)
+		adminOnly.PUT("/conflict-packages/:id", h.UpdateConflictPackage)
 		adminOnly.DELETE("/conflict-packages/:id", h.DeleteConflictPackage)
 
 		// 依赖规则
 		adminOnly.POST("/dependencies", h.CreateDependencyRule)
 		operatorPlus.GET("/dependencies", h.ListDependencyRules)
+		adminOnly.PUT("/dependencies/:id", h.UpdateDependencyRule)
 		adminOnly.DELETE("/dependencies/:id", h.DeleteDependencyRule)
 
 		// 优先级标签
 		adminOnly.POST("/priority-tags", h.CreatePriorityTag)
 		operatorPlus.GET("/priority-tags", h.ListPriorityTags)
+		adminOnly.PUT("/priority-tags/:id", h.UpdatePriorityTag)
 		adminOnly.DELETE("/priority-tags/:id", h.DeletePriorityTag)
 
 		// 综合规则校验
@@ -411,6 +415,68 @@ func (h *Handler) SaveSourceControls(c *gin.Context) {
 
 func (h *Handler) ListSourceControls(c *gin.Context) {
 	resp, err := h.appService.ListSourceControls(c.Request.Context())
+	if err != nil {
+		response.FailWithError(c, err)
+		return
+	}
+	response.OKWithData(c, resp)
+}
+
+// === Update 方法 ===
+
+func (h *Handler) UpdateConflictRule(c *gin.Context) {
+	id := c.Param("id")
+	var req appRule.UpdateConflictRuleReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Fail(c, http.StatusBadRequest, 1004, err.Error())
+		return
+	}
+	resp, err := h.appService.UpdateConflictRule(c.Request.Context(), id, req)
+	if err != nil {
+		response.FailWithError(c, err)
+		return
+	}
+	response.OKWithData(c, resp)
+}
+
+func (h *Handler) UpdateConflictPackage(c *gin.Context) {
+	id := c.Param("id")
+	var req appRule.UpdateConflictPackageReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Fail(c, http.StatusBadRequest, 1004, err.Error())
+		return
+	}
+	resp, err := h.appService.UpdateConflictPackage(c.Request.Context(), id, req)
+	if err != nil {
+		response.FailWithError(c, err)
+		return
+	}
+	response.OKWithData(c, resp)
+}
+
+func (h *Handler) UpdateDependencyRule(c *gin.Context) {
+	id := c.Param("id")
+	var req appRule.UpdateDependencyRuleReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Fail(c, http.StatusBadRequest, 1004, err.Error())
+		return
+	}
+	resp, err := h.appService.UpdateDependencyRule(c.Request.Context(), id, req)
+	if err != nil {
+		response.FailWithError(c, err)
+		return
+	}
+	response.OKWithData(c, resp)
+}
+
+func (h *Handler) UpdatePriorityTag(c *gin.Context) {
+	id := c.Param("id")
+	var req appRule.UpdatePriorityTagReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Fail(c, http.StatusBadRequest, 1004, err.Error())
+		return
+	}
+	resp, err := h.appService.UpdatePriorityTag(c.Request.Context(), id, req)
 	if err != nil {
 		response.FailWithError(c, err)
 		return

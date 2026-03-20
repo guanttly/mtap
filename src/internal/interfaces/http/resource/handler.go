@@ -26,17 +26,29 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		operatorPlus.Use(middleware.RequireRoles("admin", "scheduler_admin", "operator", "nurse", "viewer"))
 
 		adminOnly.POST("/devices", h.CreateDevice)
+		adminOnly.PUT("/devices/:id", h.UpdateDevice)
+		adminOnly.DELETE("/devices/:id", h.DeleteDevice)
 		operatorPlus.GET("/devices", h.ListDevices)
 
+		operatorPlus.GET("/campuses", h.ListCampuses)
+		operatorPlus.GET("/departments", h.ListDepartments)
+
 		adminOnly.POST("/exam-items", h.CreateExamItem)
+		adminOnly.PUT("/exam-items/:id", h.UpdateExamItem)
+		adminOnly.DELETE("/exam-items/:id", h.DeleteExamItem)
 		operatorPlus.GET("/exam-items", h.ListExamItems)
 
+		// 别名路由（嵌套格式 + 兼容旧格式）
+		adminOnly.POST("/exam-items/:id/aliases", h.CreateAliasNested)
+		operatorPlus.GET("/exam-items/:id/aliases", h.ListAliasesNested)
+		adminOnly.DELETE("/exam-items/:id/aliases/:aliasId", h.DeleteAlias)
 		adminOnly.POST("/item-aliases", h.CreateAlias)
 		operatorPlus.GET("/item-aliases", h.ListAliases)
 
 		adminOnly.POST("/slot-pools", h.CreateSlotPool)
 		operatorPlus.GET("/slot-pools", h.ListSlotPools)
 
+		operatorPlus.GET("/schedules", h.ListSchedules)
 		adminOnly.POST("/schedules/generate", h.GenerateSchedule)
 		adminOnly.POST("/schedules/suspend", h.SuspendSchedule)
 		adminOnly.POST("/schedules/substitute", h.SubstituteSchedule)
@@ -71,6 +83,15 @@ func (h *Handler) ListDevices(c *gin.Context) {
 	response.OKWithData(c, resp)
 }
 
+func (h *Handler) DeleteDevice(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.svc.DeleteDevice(c.Request.Context(), id); err != nil {
+		response.FailWithError(c, err)
+		return
+	}
+	response.OKWithData(c, nil)
+}
+
 func (h *Handler) CreateExamItem(c *gin.Context) {
 	var req appRes.CreateExamItemReq
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -92,6 +113,45 @@ func (h *Handler) ListExamItems(c *gin.Context) {
 		return
 	}
 	response.OKWithData(c, resp)
+}
+
+func (h *Handler) UpdateDevice(c *gin.Context) {
+	id := c.Param("id")
+	var req appRes.UpdateDeviceReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Fail(c, http.StatusBadRequest, 1004, err.Error())
+		return
+	}
+	resp, err := h.svc.UpdateDevice(c.Request.Context(), id, req)
+	if err != nil {
+		response.FailWithError(c, err)
+		return
+	}
+	response.OKWithData(c, resp)
+}
+
+func (h *Handler) UpdateExamItem(c *gin.Context) {
+	id := c.Param("id")
+	var req appRes.UpdateExamItemReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Fail(c, http.StatusBadRequest, 1004, err.Error())
+		return
+	}
+	resp, err := h.svc.UpdateExamItem(c.Request.Context(), id, req)
+	if err != nil {
+		response.FailWithError(c, err)
+		return
+	}
+	response.OKWithData(c, resp)
+}
+
+func (h *Handler) DeleteExamItem(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.svc.DeleteExamItem(c.Request.Context(), id); err != nil {
+		response.FailWithError(c, err)
+		return
+	}
+	response.OK(c)
 }
 
 func (h *Handler) CreateAlias(c *gin.Context) {
@@ -256,4 +316,72 @@ func (h *Handler) ReleaseSlot(c *gin.Context) {
 		return
 	}
 	response.OK(c)
+}
+
+func (h *Handler) ListCampuses(c *gin.Context) {
+	list, err := h.svc.ListCampuses(c.Request.Context())
+	if err != nil {
+		response.FailWithError(c, err)
+		return
+	}
+	response.OKWithData(c, list)
+}
+
+func (h *Handler) ListDepartments(c *gin.Context) {
+	campusID := c.Query("campus_id")
+	list, err := h.svc.ListDepartments(c.Request.Context(), campusID)
+	if err != nil {
+		response.FailWithError(c, err)
+		return
+	}
+	response.OKWithData(c, list)
+}
+
+func (h *Handler) CreateAliasNested(c *gin.Context) {
+	examItemID := c.Param("id")
+	var req appRes.CreateAliasReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Fail(c, http.StatusBadRequest, 1004, err.Error())
+		return
+	}
+	req.ExamItemID = examItemID
+	resp, err := h.svc.CreateAlias(c.Request.Context(), req)
+	if err != nil {
+		response.FailWithError(c, err)
+		return
+	}
+	response.Created(c, resp)
+}
+
+func (h *Handler) ListAliasesNested(c *gin.Context) {
+	examItemID := c.Param("id")
+	list, err := h.svc.ListAliases(c.Request.Context(), examItemID)
+	if err != nil {
+		response.FailWithError(c, err)
+		return
+	}
+	response.OKWithData(c, list)
+}
+
+func (h *Handler) DeleteAlias(c *gin.Context) {
+	aliasID := c.Param("aliasId")
+	if err := h.svc.DeleteAlias(c.Request.Context(), aliasID); err != nil {
+		response.FailWithError(c, err)
+		return
+	}
+	response.OK(c)
+}
+
+func (h *Handler) ListSchedules(c *gin.Context) {
+	var req appRes.ListSchedulesReq
+	if err := c.ShouldBindQuery(&req); err != nil {
+		response.Fail(c, http.StatusBadRequest, 1004, err.Error())
+		return
+	}
+	list, err := h.svc.ListSchedules(c.Request.Context(), req)
+	if err != nil {
+		response.FailWithError(c, err)
+		return
+	}
+	response.OKWithData(c, list)
 }

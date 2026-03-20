@@ -10,21 +10,32 @@ import (
 )
 
 type (
+	CampusRepository interface {
+		List(ctx context.Context) ([]CampusResp, error)
+	}
+	DepartmentRepository interface {
+		List(ctx context.Context, campusID string) ([]DepartmentResp, error)
+	}
 	DeviceRepository interface {
 		Create(ctx context.Context, d DeviceResp) error
 		Get(ctx context.Context, id string) (*DeviceResp, error)
 		List(ctx context.Context) ([]DeviceResp, error)
+		Update(ctx context.Context, id string, d DeviceResp) error
+		Delete(ctx context.Context, id string) error
 	}
 	ExamItemRepository interface {
 		Create(ctx context.Context, e ExamItemResp) error
 		Get(ctx context.Context, id string) (*ExamItemResp, error)
 		List(ctx context.Context) ([]ExamItemResp, error)
+		Update(ctx context.Context, id string, e ExamItemResp) error
+		Delete(ctx context.Context, id string) error
 		ListFastingIDs(ctx context.Context, ids []string) ([]string, error)
 		GetDurationMin(ctx context.Context, id string) (int, error)
 	}
 	AliasRepository interface {
 		Create(ctx context.Context, a AliasResp) error
 		List(ctx context.Context, examItemID string) ([]AliasResp, error)
+		Delete(ctx context.Context, aliasID string) error
 	}
 	SlotPoolRepository interface {
 		Create(ctx context.Context, p SlotPoolResp) error
@@ -34,6 +45,7 @@ type (
 		Create(ctx context.Context, deviceID string, date time.Time, startTime, endTime string) (string, error)
 		Suspend(ctx context.Context, deviceID string, date time.Time, reason string) error
 		Substitute(ctx context.Context, sourceDeviceID, targetDeviceID string, date time.Time) error
+		List(ctx context.Context, deviceID string, startDate, endDate time.Time) ([]ScheduleResp, error)
 	}
 	TimeSlotRepository interface {
 		BulkCreate(ctx context.Context, slots []TimeSlotResp) error
@@ -48,6 +60,8 @@ type (
 )
 
 type Service struct {
+	campusRepo   CampusRepository
+	deptRepo     DepartmentRepository
 	deviceRepo   DeviceRepository
 	examRepo     ExamItemRepository
 	aliasRepo    AliasRepository
@@ -57,6 +71,8 @@ type Service struct {
 }
 
 func NewService(
+	campusRepo CampusRepository,
+	deptRepo DepartmentRepository,
 	deviceRepo DeviceRepository,
 	examRepo ExamItemRepository,
 	aliasRepo AliasRepository,
@@ -65,6 +81,8 @@ func NewService(
 	timeSlotRepo TimeSlotRepository,
 ) *Service {
 	return &Service{
+		campusRepo:   campusRepo,
+		deptRepo:     deptRepo,
 		deviceRepo:   deviceRepo,
 		examRepo:     examRepo,
 		aliasRepo:    aliasRepo,
@@ -98,6 +116,46 @@ func (s *Service) ListDevices(ctx context.Context) ([]DeviceResp, error) {
 	return list, nil
 }
 
+func (s *Service) DeleteDevice(ctx context.Context, id string) error {
+	existing, err := s.deviceRepo.Get(ctx, id)
+	if err != nil {
+		return bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	if existing == nil {
+		return bizErr.New(bizErr.ErrNotFound)
+	}
+	if err := s.deviceRepo.Delete(ctx, id); err != nil {
+		return bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	return nil
+}
+
+func (s *Service) UpdateDevice(ctx context.Context, id string, req UpdateDeviceReq) (*DeviceResp, error) {
+	existing, err := s.deviceRepo.Get(ctx, id)
+	if err != nil {
+		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	if existing == nil {
+		return nil, bizErr.New(bizErr.ErrNotFound)
+	}
+	if req.Name != "" {
+		existing.Name = req.Name
+	}
+	if req.CampusID != "" {
+		existing.CampusID = req.CampusID
+	}
+	if req.DepartmentID != "" {
+		existing.DepartmentID = req.DepartmentID
+	}
+	if req.Status != "" {
+		existing.Status = req.Status
+	}
+	if err := s.deviceRepo.Update(ctx, id, *existing); err != nil {
+		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	return existing, nil
+}
+
 func (s *Service) CreateExamItem(ctx context.Context, req CreateExamItemReq) (*ExamItemResp, error) {
 	e := ExamItemResp{
 		ID:          uuid.New().String(),
@@ -118,6 +176,39 @@ func (s *Service) ListExamItems(ctx context.Context) ([]ExamItemResp, error) {
 		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
 	}
 	return list, nil
+}
+
+func (s *Service) UpdateExamItem(ctx context.Context, id string, req UpdateExamItemReq) (*ExamItemResp, error) {
+	existing, err := s.examRepo.Get(ctx, id)
+	if err != nil {
+		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	if existing == nil {
+		return nil, bizErr.New(bizErr.ErrNotFound)
+	}
+	if req.Name != "" {
+		existing.Name = req.Name
+	}
+	if req.DurationMin > 0 {
+		existing.DurationMin = req.DurationMin
+	}
+	if req.IsFasting != nil {
+		existing.IsFasting = *req.IsFasting
+	}
+	if req.FastingDesc != "" {
+		existing.FastingDesc = req.FastingDesc
+	}
+	if err := s.examRepo.Update(ctx, id, *existing); err != nil {
+		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	return existing, nil
+}
+
+func (s *Service) DeleteExamItem(ctx context.Context, id string) error {
+	if err := s.examRepo.Delete(ctx, id); err != nil {
+		return bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	return nil
 }
 
 func (s *Service) CreateAlias(ctx context.Context, req CreateAliasReq) (*AliasResp, error) {
@@ -231,7 +322,7 @@ func (s *Service) GenerateSchedule(ctx context.Context, req GenerateScheduleReq)
 		var slots []TimeSlotResp
 		for cur := startAt; !cur.Add(slotDur).After(endAt); cur = cur.Add(slotDur) {
 			slots = append(slots, TimeSlotResp{
-				ID:              uuid.New().String(),
+				ID:               uuid.New().String(),
 				DeviceID:         req.DeviceID,
 				ExamItemID:       req.ExamItemID,
 				PoolType:         poolType,
@@ -392,7 +483,7 @@ func (s *Service) AddExtraSlots(ctx context.Context, req AddExtraSlotsReq) ([]Ti
 	var slots []TimeSlotResp
 	for cur := startAt; !cur.Add(slotDur).After(endAt); cur = cur.Add(slotDur) {
 		slots = append(slots, TimeSlotResp{
-			ID:              uuid.New().String(),
+			ID:               uuid.New().String(),
 			DeviceID:         req.DeviceID,
 			ExamItemID:       req.ExamItemID,
 			PoolType:         poolType,
@@ -408,4 +499,56 @@ func (s *Service) AddExtraSlots(ctx context.Context, req AddExtraSlotsReq) ([]Ti
 		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
 	}
 	return slots, nil
+}
+
+// === 院区与科室 ===
+
+func (s *Service) ListCampuses(ctx context.Context) ([]CampusResp, error) {
+	list, err := s.campusRepo.List(ctx)
+	if err != nil {
+		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	return list, nil
+}
+
+func (s *Service) ListDepartments(ctx context.Context, campusID string) ([]DepartmentResp, error) {
+	list, err := s.deptRepo.List(ctx, campusID)
+	if err != nil {
+		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	return list, nil
+}
+
+// === 别名删除 ===
+
+func (s *Service) DeleteAlias(ctx context.Context, aliasID string) error {
+	if err := s.aliasRepo.Delete(ctx, aliasID); err != nil {
+		return bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	return nil
+}
+
+// === 排班日历查询 ===
+
+func (s *Service) ListSchedules(ctx context.Context, req ListSchedulesReq) ([]ScheduleResp, error) {
+	var startDate, endDate time.Time
+	if req.StartDate != "" {
+		d, err := time.Parse("2006-01-02", req.StartDate)
+		if err != nil {
+			return nil, bizErr.NewWithDetail(bizErr.ErrInvalidParam, "start_date格式应为YYYY-MM-DD")
+		}
+		startDate = d
+	}
+	if req.EndDate != "" {
+		d, err := time.Parse("2006-01-02", req.EndDate)
+		if err != nil {
+			return nil, bizErr.NewWithDetail(bizErr.ErrInvalidParam, "end_date格式应为YYYY-MM-DD")
+		}
+		endDate = d
+	}
+	list, err := s.scheduleRepo.List(ctx, req.DeviceID, startDate, endDate)
+	if err != nil {
+		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	return list, nil
 }

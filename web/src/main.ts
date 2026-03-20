@@ -1,3 +1,18 @@
-// 核心目的：Vue应用入口
-// 模块功能：创建Vue实例、注册路由、注册Pinia、挂载应用
-// TODO: 实现
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
+import Antd from 'ant-design-vue'
+import 'ant-design-vue/dist/reset.css'
+import '@unocss/reset/tailwind.css'
+import 'virtual:uno.css'
+
+import App from './App.vue'
+import router from './router'
+import './styles/global.css'
+
+const app = createApp(App)
+
+app.use(createPinia())
+app.use(router)
+app.use(Antd)
+
+app.mount('#app')

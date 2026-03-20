@@ -1,12 +1,27 @@
 // Package optimization 智能效能优化领域 - 领域事件
-// 核心目的：定义效能优化的领域事件
-// 模块功能：
-//   - BottleneckDetected: 异常检测发现瓶颈
-//   - StrategyApproved: 管理员批准策略
-//   - TrialStarted: 策略试运行开始
-//   - TrialEmergencyRollback: 关键指标恶化超阈值触发紧急回滚
-//   - TrialCompleted: 试运行周期到期
-//   - StrategyPromoted: 策略转正/常态化
-//   - StrategyDecayed: 已转正策略效果衰减
-//   - PerformanceScanCompleted: 周期效能扫描完成
 package optimization
+
+import "time"
+
+// EventType 领域事件类型
+type EventType string
+
+const (
+	EvtBottleneckDetected       EventType = "bottleneck_detected"
+	EvtStrategyApproved         EventType = "strategy_approved"
+	EvtTrialStarted             EventType = "trial_started"
+	EvtTrialEmergencyRollback   EventType = "trial_emergency_rollback"
+	EvtTrialCompleted           EventType = "trial_completed"
+	EvtStrategyPromoted         EventType = "strategy_promoted"
+	EvtStrategyDecayed          EventType = "strategy_decayed"
+	EvtPerformanceScanCompleted EventType = "performance_scan_completed"
+)
+
+// OptimizationEvent 效能优化领域事件
+type OptimizationEvent struct {
+	Type       EventType
+	StrategyID string
+	AlertID    string
+	OccurredAt time.Time
+	Payload    map[string]interface{}
+}

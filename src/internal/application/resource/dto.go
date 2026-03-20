@@ -2,6 +2,38 @@ package resource
 
 import "time"
 
+type CampusResp struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Code    string `json:"code"`
+	Address string `json:"address,omitempty"`
+	Status  string `json:"status"`
+}
+
+type DepartmentResp struct {
+	ID       string `json:"id"`
+	CampusID string `json:"campus_id"`
+	Name     string `json:"name"`
+	Code     string `json:"code"`
+	Floor    string `json:"floor,omitempty"`
+	Status   string `json:"status"`
+}
+
+type ScheduleResp struct {
+	ID        string `json:"id"`
+	DeviceID  string `json:"device_id"`
+	Date      string `json:"date"`
+	StartTime string `json:"start_time"`
+	EndTime   string `json:"end_time"`
+	Status    string `json:"status"`
+}
+
+type ListSchedulesReq struct {
+	DeviceID  string `form:"device_id"`
+	StartDate string `form:"start_date"` // YYYY-MM-DD
+	EndDate   string `form:"end_date"`   // YYYY-MM-DD
+}
+
 type CreateDeviceReq struct {
 	Name         string `json:"name" binding:"required,max=100"`
 	CampusID     string `json:"campus_id"`
@@ -38,9 +70,9 @@ type CreateAliasReq struct {
 }
 
 type AliasResp struct {
-	ID        string `json:"id"`
+	ID         string `json:"id"`
 	ExamItemID string `json:"exam_item_id"`
-	Alias     string `json:"alias"`
+	Alias      string `json:"alias"`
 }
 
 type CreateSlotPoolReq struct {
@@ -56,31 +88,31 @@ type SlotPoolResp struct {
 }
 
 type GenerateScheduleReq struct {
-	DeviceID    string `json:"device_id" binding:"required"`
-	Date        string `json:"date" binding:"omitempty"`       // YYYY-MM-DD（单日生成）
-	StartDate   string `json:"start_date" binding:"omitempty"` // YYYY-MM-DD（批量生成起）
-	EndDate     string `json:"end_date" binding:"omitempty"`   // YYYY-MM-DD（批量生成止）
-	StartTime   string `json:"start_time" binding:"required"` // HH:mm
-	EndTime     string `json:"end_time" binding:"required"`   // HH:mm
-	SlotMinutes int    `json:"slot_minutes" binding:"required,gt=0"`
-	ExamItemID  string `json:"exam_item_id"` // 可选：绑定检查项目
-	PoolType    string `json:"pool_type" binding:"omitempty,oneof=public department doctor outpatient inpatient referral"`
-	SkipWeekends bool  `json:"skip_weekends"`
+	DeviceID     string `json:"device_id" binding:"required"`
+	Date         string `json:"date" binding:"omitempty"`       // YYYY-MM-DD（单日生成）
+	StartDate    string `json:"start_date" binding:"omitempty"` // YYYY-MM-DD（批量生成起）
+	EndDate      string `json:"end_date" binding:"omitempty"`   // YYYY-MM-DD（批量生成止）
+	StartTime    string `json:"start_time" binding:"required"`  // HH:mm
+	EndTime      string `json:"end_time" binding:"required"`    // HH:mm
+	SlotMinutes  int    `json:"slot_minutes" binding:"required,gt=0"`
+	ExamItemID   string `json:"exam_item_id"` // 可选：绑定检查项目
+	PoolType     string `json:"pool_type" binding:"omitempty,oneof=public department doctor outpatient inpatient referral"`
+	SkipWeekends bool   `json:"skip_weekends"`
 }
 
 type TimeSlotResp struct {
-	ID        string    `json:"id"`
-	DeviceID  string    `json:"device_id"`
-	ExamItemID string   `json:"exam_item_id,omitempty"`
-	PoolType  string    `json:"pool_type"`
-	StartAt   time.Time `json:"start_at"`
-	EndAt     time.Time `json:"end_at"`
-	Status    string    `json:"status"`
-	StandardDuration int `json:"standard_duration"`
-	AdjustedDuration int `json:"adjusted_duration"`
-	LockedBy  string    `json:"locked_by,omitempty"`
-	LockUntil *time.Time `json:"lock_until,omitempty"`
-	Remaining int       `json:"remaining"`
+	ID               string     `json:"id"`
+	DeviceID         string     `json:"device_id"`
+	ExamItemID       string     `json:"exam_item_id,omitempty"`
+	PoolType         string     `json:"pool_type"`
+	StartAt          time.Time  `json:"start_at"`
+	EndAt            time.Time  `json:"end_at"`
+	Status           string     `json:"status"`
+	StandardDuration int        `json:"standard_duration"`
+	AdjustedDuration int        `json:"adjusted_duration"`
+	LockedBy         string     `json:"locked_by,omitempty"`
+	LockUntil        *time.Time `json:"lock_until,omitempty"`
+	Remaining        int        `json:"remaining"`
 }
 
 type LockSlotReq struct {
@@ -96,11 +128,11 @@ type QueryAvailableSlotsReq struct {
 }
 
 type SuspendScheduleReq struct {
-	DeviceID   string `json:"device_id" binding:"required"`
-	Date       string `json:"date" binding:"required"` // YYYY-MM-DD
-	StartTime  string `json:"start_time" binding:"required"` // HH:mm
-	EndTime    string `json:"end_time" binding:"required"`   // HH:mm
-	Reason     string `json:"reason" binding:"required,max=200"`
+	DeviceID  string `json:"device_id" binding:"required"`
+	Date      string `json:"date" binding:"required"`       // YYYY-MM-DD
+	StartTime string `json:"start_time" binding:"required"` // HH:mm
+	EndTime   string `json:"end_time" binding:"required"`   // HH:mm
+	Reason    string `json:"reason" binding:"required,max=200"`
 }
 
 type SubstituteScheduleReq struct {
@@ -111,11 +143,27 @@ type SubstituteScheduleReq struct {
 
 type AddExtraSlotsReq struct {
 	DeviceID    string `json:"device_id" binding:"required"`
-	Date        string `json:"date" binding:"required"` // YYYY-MM-DD
+	Date        string `json:"date" binding:"required"`       // YYYY-MM-DD
 	StartTime   string `json:"start_time" binding:"required"` // HH:mm
 	EndTime     string `json:"end_time" binding:"required"`   // HH:mm
 	SlotMinutes int    `json:"slot_minutes" binding:"required,gt=0"`
 	Reason      string `json:"reason" binding:"required,max=200"`
 	ExamItemID  string `json:"exam_item_id"`
 	PoolType    string `json:"pool_type" binding:"omitempty,oneof=public department doctor outpatient inpatient referral"`
+}
+
+// UpdateDeviceReq 更新设备请求
+type UpdateDeviceReq struct {
+	Name         string `json:"name" binding:"omitempty,max=100"`
+	CampusID     string `json:"campus_id"`
+	DepartmentID string `json:"department_id"`
+	Status       string `json:"status" binding:"omitempty,oneof=active maintenance retired"`
+}
+
+// UpdateExamItemReq 更新检查项目请求
+type UpdateExamItemReq struct {
+	Name        string `json:"name" binding:"omitempty,max=100"`
+	DurationMin int    `json:"duration_min" binding:"omitempty,gt=0"`
+	IsFasting   *bool  `json:"is_fasting"`
+	FastingDesc string `json:"fasting_desc" binding:"omitempty,max=200"`
 }

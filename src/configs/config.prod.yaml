@@ -1,5 +1,71 @@
 # MTAP 生产环境配置
 # 核心目的：生产环境专用配置覆盖
-# 覆盖：数据库主从配置、Redis集群、MQ集群等
+# 使用方式：MTAP_CONFIG=configs/config.prod.yaml
+# 敏感字段（密码、密钥）务必通过环境变量注入，不要写在此文件中
 
-# TODO: 生产环境配置
+server:
+  port: 8080
+  mode: release
+  read_timeout: 30s
+  write_timeout: 60s
+
+# ─── 数据库 ─────────────────────────────────────────────────────────────────
+database:
+  driver: mysql
+  host: mysql-master       # 写主库，env: MTAP_DB_HOST
+  port: 3306
+  name: mtap
+  user: mtap               # env: MTAP_DB_USER
+  password: ""             # 必须通过环境变量 MTAP_DB_PASS 注入
+  charset: utf8mb4
+  parse_time: true
+  max_open_conns: 50
+  max_idle_conns: 10
+  conn_max_lifetime: 30m
+
+# ─── Redis ──────────────────────────────────────────────────────────────────
+redis:
+  addr: redis:6379         # env: MTAP_REDIS_ADDR
+  password: ""             # env: MTAP_REDIS_PASS
+  db: 0
+  pool_size: 30
+
+# ─── Kafka ──────────────────────────────────────────────────────────────────
+kafka:
+  brokers:                 # env: MTAP_KAFKA_BROKERS=kafka1:9092,kafka2:9092
+    - kafka:9092
+  group_id: mtap
+  num_partitions: 6        # 生产环境更多分区
+
+# ─── JWT ────────────────────────────────────────────────────────────────────
+jwt:
+  secret: ""               # 必须通过环境变量 MTAP_JWT_SECRET 注入
+  access_expire: 2h
+  refresh_expire: 168h
+
+# ─── HIS 系统 ────────────────────────────────────────────────────────────────
+his:
+  base_url: http://his-internal/api  # 内网 HIS 地址
+  api_key: ""              # env: MTAP_HIS_KEY
+  timeout: 30s
+  retry: 3
+
+# ─── 收费系统 ────────────────────────────────────────────────────────────────
+payment:
+  base_url: http://payment-internal/api
+  api_key: ""              # env: MTAP_PAY_KEY
+  timeout: 5s
+
+# ─── 消息平台 ────────────────────────────────────────────────────────────────
+message:
+  sms_provider: aliyun
+  sms_key: ""              # env: MTAP_SMS_KEY
+  sms_secret: ""           # env: MTAP_SMS_SECRET
+  sms_sign: MTAP诊疗预约
+  wechat_app_id: ""        # env: MTAP_WX_APPID
+  wechat_token: ""         # env: MTAP_WX_TOKEN
+
+# ─── 日志 ────────────────────────────────────────────────────────────────────
+log:
+  level: warn
+  audit_path: /var/log/mtap/audit.log

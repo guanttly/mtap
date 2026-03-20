@@ -8,8 +8,8 @@ import (
 	"time"
 
 	domain "github.com/euler/mtap/internal/domain/rule"
-	"github.com/google/uuid"
 	bizErr "github.com/euler/mtap/pkg/errors"
+	"github.com/google/uuid"
 )
 
 // RuleAppService 规则管理应用服务
@@ -25,9 +25,9 @@ type RuleAppService struct {
 	patientHistory PatientHistoryProvider
 	examItemMeta   ExamItemMetaProvider
 
-	conflictSvc      *domain.ConflictDetectionService
-	depSvc           *domain.DependencyValidationService
-	circularChecker  *domain.CircularDependencyChecker
+	conflictSvc     *domain.ConflictDetectionService
+	depSvc          *domain.DependencyValidationService
+	circularChecker *domain.CircularDependencyChecker
 }
 
 // PatientHistoryProvider 查询患者历史检查记录（供冲突时间间隔判断）
@@ -273,6 +273,117 @@ func (s *RuleAppService) DeletePriorityTag(ctx context.Context, id string) error
 		return bizErr.New(bizErr.ErrRulePresetNoDelete)
 	}
 	return s.tagRepo.Delete(ctx, id)
+}
+
+// === 更新操作 ===
+
+func (s *RuleAppService) UpdateConflictRule(ctx context.Context, id string, req UpdateConflictRuleReq) (*ConflictRuleResp, error) {
+	rule, err := s.conflictRuleRepo.FindByID(ctx, id)
+	if err != nil {
+		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	if rule == nil {
+		return nil, bizErr.New(bizErr.ErrNotFound)
+	}
+	if req.MinInterval != nil {
+		rule.MinInterval = *req.MinInterval
+	}
+	if req.Level != nil {
+		rule.Level = domain.ConflictLevel(*req.Level)
+	}
+	if req.Status != nil {
+		rule.Status = domain.RuleStatus(*req.Status)
+	}
+	if err := rule.Validate(); err != nil {
+		return nil, err
+	}
+	rule.UpdatedAt = time.Now()
+	if err := s.conflictRuleRepo.Update(ctx, rule); err != nil {
+		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	return ConflictRuleToResp(rule), nil
+}
+
+func (s *RuleAppService) UpdateConflictPackage(ctx context.Context, id string, req UpdateConflictPackageReq) (*ConflictPackageResp, error) {
+	pkg, err := s.conflictPkgRepo.FindByID(ctx, id)
+	if err != nil {
+		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	if pkg == nil {
+		return nil, bizErr.New(bizErr.ErrNotFound)
+	}
+	if req.Name != nil {
+		pkg.Name = *req.Name
+	}
+	if req.MinInterval != nil {
+		pkg.MinInterval = *req.MinInterval
+	}
+	if req.Level != nil {
+		pkg.Level = domain.ConflictLevel(*req.Level)
+	}
+	if len(req.ItemIDs) > 0 {
+		if len(req.ItemIDs) < 2 {
+			return nil, bizErr.New(bizErr.ErrRulePkgTooFew)
+		}
+		items := make([]domain.ConflictPackageItem, len(req.ItemIDs))
+		for i, itemID := range req.ItemIDs {
+			items[i] = domain.ConflictPackageItem{PackageID: pkg.ID, ExamItemID: itemID}
+		}
+		pkg.Items = items
+	}
+	pkg.UpdatedAt = time.Now()
+	if err := s.conflictPkgRepo.Update(ctx, pkg); err != nil {
+		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	return ConflictPackageToResp(pkg), nil
+}
+
+func (s *RuleAppService) UpdateDependencyRule(ctx context.Context, id string, req UpdateDependencyRuleReq) (*DependencyRuleResp, error) {
+	rule, err := s.depRuleRepo.FindByID(ctx, id)
+	if err != nil {
+		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	if rule == nil {
+		return nil, bizErr.New(bizErr.ErrNotFound)
+	}
+	if req.Type != nil {
+		rule.Type = domain.DependencyType(*req.Type)
+	}
+	if req.ValidityHours != nil {
+		rule.ValidityHours = *req.ValidityHours
+	}
+	if req.Status != nil {
+		rule.Status = domain.RuleStatus(*req.Status)
+	}
+	rule.UpdatedAt = time.Now()
+	if err := s.depRuleRepo.Update(ctx, rule); err != nil {
+		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	return DependencyRuleToResp(rule), nil
+}
+
+func (s *RuleAppService) UpdatePriorityTag(ctx context.Context, id string, req UpdatePriorityTagReq) (*PriorityTagResp, error) {
+	tag, err := s.tagRepo.FindByID(ctx, id)
+	if err != nil {
+		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	if tag == nil {
+		return nil, bizErr.New(bizErr.ErrNotFound)
+	}
+	if req.Name != nil {
+		tag.Name = *req.Name
+	}
+	if req.Weight != nil {
+		tag.Weight = *req.Weight
+	}
+	if req.Color != nil {
+		tag.Color = *req.Color
+	}
+	tag.UpdatedAt = time.Now()
+	if err := s.tagRepo.Update(ctx, tag); err != nil {
+		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	return PriorityTagToResp(tag), nil
 }
 
 // === 排序策略 ===

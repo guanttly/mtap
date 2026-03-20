@@ -3,6 +3,32 @@ package po
 
 import "time"
 
+type CampusPO struct {
+	ID        string    `gorm:"column:id;primaryKey;size:36"`
+	Name      string    `gorm:"column:name;not null;size:50;uniqueIndex"`
+	Code      string    `gorm:"column:code;not null;size:20;uniqueIndex"`
+	Address   string    `gorm:"column:address;size:200"`
+	Status    string    `gorm:"column:status;not null;size:10;default:active;index"`
+	CreatedAt time.Time `gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt time.Time `gorm:"column:updated_at;autoUpdateTime"`
+}
+
+func (CampusPO) TableName() string { return "campuses" }
+
+type DepartmentPO struct {
+	ID        string     `gorm:"column:id;primaryKey;size:36"`
+	CampusID  string     `gorm:"column:campus_id;not null;size:36;index"`
+	Name      string     `gorm:"column:name;not null;size:50"`
+	Code      string     `gorm:"column:code;not null;size:20;uniqueIndex"`
+	Floor     string     `gorm:"column:floor;size:20"`
+	Status    string     `gorm:"column:status;not null;size:10;default:active;index"`
+	SyncedAt  *time.Time `gorm:"column:synced_at"`
+	CreatedAt time.Time  `gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt time.Time  `gorm:"column:updated_at;autoUpdateTime"`
+}
+
+func (DepartmentPO) TableName() string { return "departments" }
+
 type DevicePO struct {
 	ID           string    `gorm:"column:id;primaryKey;size:36"`
 	Name         string    `gorm:"column:name;not null;size:100;index"`
@@ -28,10 +54,10 @@ type ExamItemPO struct {
 func (ExamItemPO) TableName() string { return "exam_items" }
 
 type ItemAliasPO struct {
-	ID        string    `gorm:"column:id;primaryKey;size:36"`
-	ExamItemID string   `gorm:"column:exam_item_id;not null;size:36;index"`
-	Alias     string    `gorm:"column:alias;not null;size:50;uniqueIndex"`
-	CreatedAt time.Time `gorm:"column:created_at;autoCreateTime"`
+	ID         string    `gorm:"column:id;primaryKey;size:36"`
+	ExamItemID string    `gorm:"column:exam_item_id;not null;size:36;index"`
+	Alias      string    `gorm:"column:alias;not null;size:50;uniqueIndex"`
+	CreatedAt  time.Time `gorm:"column:created_at;autoCreateTime"`
 }
 
 func (ItemAliasPO) TableName() string { return "item_aliases" }
@@ -48,23 +74,23 @@ type SlotPoolPO struct {
 func (SlotPoolPO) TableName() string { return "slot_pools" }
 
 type SchedulePO struct {
-	ID        string    `gorm:"column:id;primaryKey;size:36"`
-	DeviceID  string    `gorm:"column:device_id;not null;size:36;index"`
-	Date      time.Time `gorm:"column:date;not null;index"` // 只使用日期部分
-	StartTime string    `gorm:"column:start_time;not null;size:5"` // HH:mm
-	EndTime   string    `gorm:"column:end_time;not null;size:5"`
-	Status    string    `gorm:"column:status;not null;size:15;default:normal;index"`
-	SuspendReason string `gorm:"column:suspend_reason;size:200"`
-	CreatedAt time.Time `gorm:"column:created_at;autoCreateTime"`
-	UpdatedAt time.Time `gorm:"column:updated_at;autoUpdateTime"`
+	ID            string    `gorm:"column:id;primaryKey;size:36"`
+	DeviceID      string    `gorm:"column:device_id;not null;size:36;index"`
+	Date          time.Time `gorm:"column:date;not null;index"`        // 只使用日期部分
+	StartTime     string    `gorm:"column:start_time;not null;size:5"` // HH:mm
+	EndTime       string    `gorm:"column:end_time;not null;size:5"`
+	Status        string    `gorm:"column:status;not null;size:15;default:normal;index"`
+	SuspendReason string    `gorm:"column:suspend_reason;size:200"`
+	CreatedAt     time.Time `gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt     time.Time `gorm:"column:updated_at;autoUpdateTime"`
 }
 
 func (SchedulePO) TableName() string { return "schedules" }
 
 type TimeSlotPO struct {
-	ID              string     `gorm:"column:id;primaryKey;size:36"`
+	ID               string     `gorm:"column:id;primaryKey;size:36"`
 	DeviceID         string     `gorm:"column:device_id;not null;size:36;index"`
-	Date            time.Time  `gorm:"column:date;not null;index"`
+	Date             time.Time  `gorm:"column:date;not null;index"`
 	ExamItemID       string     `gorm:"column:exam_item_id;size:36;index"`
 	PoolType         string     `gorm:"column:pool_type;not null;size:15;default:public;index"`
 	StartAt          time.Time  `gorm:"column:start_at;not null;index"`

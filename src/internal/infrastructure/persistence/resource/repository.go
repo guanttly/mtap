@@ -25,13 +25,17 @@ type AliasRepo struct{ db *gorm.DB }
 type SlotPoolRepo struct{ db *gorm.DB }
 type ScheduleRepo struct{ db *gorm.DB }
 type TimeSlotRepo struct{ db *gorm.DB }
+type CampusRepo struct{ db *gorm.DB }
+type DepartmentRepo struct{ db *gorm.DB }
 
-func (r *Repositories) DeviceRepo() *DeviceRepo       { return &DeviceRepo{db: r.DB} }
-func (r *Repositories) ExamItemRepo() *ExamItemRepo   { return &ExamItemRepo{db: r.DB} }
-func (r *Repositories) AliasRepo() *AliasRepo         { return &AliasRepo{db: r.DB} }
-func (r *Repositories) SlotPoolRepo() *SlotPoolRepo   { return &SlotPoolRepo{db: r.DB} }
-func (r *Repositories) ScheduleRepo() *ScheduleRepo   { return &ScheduleRepo{db: r.DB} }
-func (r *Repositories) TimeSlotRepo() *TimeSlotRepo   { return &TimeSlotRepo{db: r.DB} }
+func (r *Repositories) DeviceRepo() *DeviceRepo         { return &DeviceRepo{db: r.DB} }
+func (r *Repositories) ExamItemRepo() *ExamItemRepo     { return &ExamItemRepo{db: r.DB} }
+func (r *Repositories) AliasRepo() *AliasRepo           { return &AliasRepo{db: r.DB} }
+func (r *Repositories) SlotPoolRepo() *SlotPoolRepo     { return &SlotPoolRepo{db: r.DB} }
+func (r *Repositories) ScheduleRepo() *ScheduleRepo     { return &ScheduleRepo{db: r.DB} }
+func (r *Repositories) TimeSlotRepo() *TimeSlotRepo     { return &TimeSlotRepo{db: r.DB} }
+func (r *Repositories) CampusRepo() *CampusRepo         { return &CampusRepo{db: r.DB} }
+func (r *Repositories) DepartmentRepo() *DepartmentRepo { return &DepartmentRepo{db: r.DB} }
 
 func (r *DeviceRepo) Create(ctx context.Context, d resource.DeviceResp) error {
 	return r.db.WithContext(ctx).Create(&po.DevicePO{
@@ -76,6 +80,19 @@ func (r *DeviceRepo) List(ctx context.Context) ([]resource.DeviceResp, error) {
 	return out, nil
 }
 
+func (r *DeviceRepo) Update(ctx context.Context, id string, d resource.DeviceResp) error {
+	return r.db.WithContext(ctx).Model(&po.DevicePO{}).Where("id = ?", id).Updates(map[string]interface{}{
+		"name":          d.Name,
+		"campus_id":     d.CampusID,
+		"department_id": d.DepartmentID,
+		"status":        d.Status,
+	}).Error
+}
+
+func (r *DeviceRepo) Delete(ctx context.Context, id string) error {
+	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&po.DevicePO{}).Error
+}
+
 func (r *ExamItemRepo) Create(ctx context.Context, e resource.ExamItemResp) error {
 	return r.db.WithContext(ctx).Create(&po.ExamItemPO{
 		ID:          e.ID,
@@ -114,6 +131,19 @@ func (r *ExamItemRepo) List(ctx context.Context) ([]resource.ExamItemResp, error
 		})
 	}
 	return out, nil
+}
+
+func (r *ExamItemRepo) Update(ctx context.Context, id string, e resource.ExamItemResp) error {
+	return r.db.WithContext(ctx).Model(&po.ExamItemPO{}).Where("id = ?", id).Updates(map[string]interface{}{
+		"name":         e.Name,
+		"duration_min": e.DurationMin,
+		"is_fasting":   e.IsFasting,
+		"fasting_desc": e.FastingDesc,
+	}).Error
+}
+
+func (r *ExamItemRepo) Delete(ctx context.Context, id string) error {
+	return r.db.WithContext(ctx).Delete(&po.ExamItemPO{}, "id = ?", id).Error
 }
 func (r *ExamItemRepo) ListFastingIDs(ctx context.Context, ids []string) ([]string, error) {
 	var ps []po.ExamItemPO
@@ -233,9 +263,9 @@ func (r *TimeSlotRepo) BulkCreate(ctx context.Context, slots []resource.TimeSlot
 	ps := make([]po.TimeSlotPO, 0, len(slots))
 	for _, s := range slots {
 		ps = append(ps, po.TimeSlotPO{
-			ID:              s.ID,
+			ID:               s.ID,
 			DeviceID:         s.DeviceID,
-			Date:            time.Date(s.StartAt.Year(), s.StartAt.Month(), s.StartAt.Day(), 0, 0, 0, 0, s.StartAt.Location()),
+			Date:             time.Date(s.StartAt.Year(), s.StartAt.Month(), s.StartAt.Day(), 0, 0, 0, 0, s.StartAt.Location()),
 			ExamItemID:       s.ExamItemID,
 			PoolType:         s.PoolType,
 			StartAt:          s.StartAt,
@@ -262,7 +292,7 @@ func (r *TimeSlotRepo) ListByDeviceAndDate(ctx context.Context, deviceID string,
 	out := make([]resource.TimeSlotResp, 0, len(ps))
 	for _, p := range ps {
 		out = append(out, resource.TimeSlotResp{
-			ID:              p.ID,
+			ID:               p.ID,
 			DeviceID:         p.DeviceID,
 			ExamItemID:       p.ExamItemID,
 			PoolType:         p.PoolType,
@@ -298,7 +328,7 @@ func (r *TimeSlotRepo) QueryAvailable(ctx context.Context, deviceID string, date
 	out := make([]resource.TimeSlotResp, 0, len(ps))
 	for _, p := range ps {
 		out = append(out, resource.TimeSlotResp{
-			ID:              p.ID,
+			ID:               p.ID,
 			DeviceID:         p.DeviceID,
 			ExamItemID:       p.ExamItemID,
 			PoolType:         p.PoolType,
@@ -392,4 +422,93 @@ func (r *TimeSlotRepo) HasOverlap(ctx context.Context, deviceID string, date tim
 		return false, err
 	}
 	return count > 0, nil
+}
+
+// === AliasRepo 扩展 ===
+
+func (r *AliasRepo) Delete(ctx context.Context, aliasID string) error {
+	res := r.db.WithContext(ctx).Delete(&po.ItemAliasPO{}, "id = ?", aliasID)
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return bizErr.New(bizErr.ErrNotFound)
+	}
+	return nil
+}
+
+// === ScheduleRepo 扩展 ===
+
+func (r *ScheduleRepo) List(ctx context.Context, deviceID string, startDate, endDate time.Time) ([]resource.ScheduleResp, error) {
+	var ps []po.SchedulePO
+	q := r.db.WithContext(ctx).Model(&po.SchedulePO{})
+	if deviceID != "" {
+		q = q.Where("device_id = ?", deviceID)
+	}
+	if !startDate.IsZero() {
+		q = q.Where("date >= ?", startDate)
+	}
+	if !endDate.IsZero() {
+		q = q.Where("date <= ?", endDate)
+	}
+	if err := q.Order("date ASC, start_time ASC").Find(&ps).Error; err != nil {
+		return nil, err
+	}
+	out := make([]resource.ScheduleResp, 0, len(ps))
+	for _, p := range ps {
+		out = append(out, resource.ScheduleResp{
+			ID:        p.ID,
+			DeviceID:  p.DeviceID,
+			Date:      p.Date.Format("2006-01-02"),
+			StartTime: p.StartTime,
+			EndTime:   p.EndTime,
+			Status:    p.Status,
+		})
+	}
+	return out, nil
+}
+
+// === CampusRepo ===
+
+func (r *CampusRepo) List(ctx context.Context) ([]resource.CampusResp, error) {
+	var ps []po.CampusPO
+	if err := r.db.WithContext(ctx).Where("status = ?", "active").Order("name ASC").Find(&ps).Error; err != nil {
+		return nil, err
+	}
+	out := make([]resource.CampusResp, 0, len(ps))
+	for _, p := range ps {
+		out = append(out, resource.CampusResp{
+			ID:      p.ID,
+			Name:    p.Name,
+			Code:    p.Code,
+			Address: p.Address,
+			Status:  p.Status,
+		})
+	}
+	return out, nil
+}
+
+// === DepartmentRepo ===
+
+func (r *DepartmentRepo) List(ctx context.Context, campusID string) ([]resource.DepartmentResp, error) {
+	var ps []po.DepartmentPO
+	q := r.db.WithContext(ctx).Where("status = ?", "active")
+	if campusID != "" {
+		q = q.Where("campus_id = ?", campusID)
+	}
+	if err := q.Order("name ASC").Find(&ps).Error; err != nil {
+		return nil, err
+	}
+	out := make([]resource.DepartmentResp, 0, len(ps))
+	for _, p := range ps {
+		out = append(out, resource.DepartmentResp{
+			ID:       p.ID,
+			CampusID: p.CampusID,
+			Name:     p.Name,
+			Code:     p.Code,
+			Floor:    p.Floor,
+			Status:   p.Status,
+		})
+	}
+	return out, nil
 }
