@@ -1,5 +1,6 @@
-import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios'
 import { message } from 'ant-design-vue'
+import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios'
+import { getErrorMessage } from '@/utils/errorCode'
 
 // 统一响应结构
 interface ApiResponse<T = unknown> {
@@ -37,16 +38,22 @@ let pendingQueue: Array<(token: string) => void> = []
 
 http.interceptors.response.use(
   (response: AxiosResponse<ApiResponse>) => {
-    const { code, message: msg, data } = response.data
+    const { code, data } = response.data
     if (code !== 0) {
-      message.error(msg || '请求失败')
-      return Promise.reject(new Error(msg))
+      const detail = typeof data === 'string' ? data : undefined
+      const errMsg = getErrorMessage(code, detail)
+      message.error(errMsg)
+      return Promise.reject(new Error(errMsg))
     }
     return data as any
   },
   async (error) => {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean }
-    if (error.response?.status === 401 && !originalRequest._retry) {
+
+    // 登录接口本身不走 token 刷新逻辑，直接抛出错误让调用方处理
+    const isLoginRequest = originalRequest.url?.includes('/auth/login')
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isLoginRequest) {
       const refreshToken = localStorage.getItem('refresh_token')
       if (!refreshToken) {
         localStorage.clear()
@@ -86,9 +93,18 @@ http.interceptors.response.use(
       }
     }
 
-    const msg = error.response?.data?.message || error.message || '网络错误'
-    message.error(msg)
-    return Promise.reject(error)
+    const resData = error.response?.data
+    const code: number | undefined = resData?.code
+    const detail = typeof resData?.data === 'string' ? resData.data : undefined
+    // 按错误码查前端码表，找不到则用 message 字段，最后兜底网络错误
+    const msg = code
+      ? getErrorMessage(code, detail)
+      : (resData?.message ?? error.message ?? '网络错误')
+    // 登录请求由调用方自己处理错误提示，避免重复弹 toast
+    if (!isLoginRequest) {
+      message.error(msg)
+    }
+    return Promise.reject(new Error(msg))
   },
 )
 

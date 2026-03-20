@@ -51,7 +51,7 @@ const detailColumns = [
     >
       <template #expandedRowRender="{ record }">
         <a-table
-          :data-source="(record as PerformanceScan).opportunities"
+          :data-source="(record as PerformanceScan).opportunities ?? []"
           :columns="detailColumns"
           :pagination="false"
           size="small"

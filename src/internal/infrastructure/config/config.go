@@ -31,14 +31,15 @@ type Config struct {
 // ServerConfig HTTP 服务配置
 type ServerConfig struct {
 	Port         int           `yaml:"port"`
-	Mode         string        `yaml:"mode"` // debug / release
+	WSPort       int           `yaml:"ws_port"` // WebSocket 服务端口，默认 8081
+	Mode         string        `yaml:"mode"`    // debug / release
 	ReadTimeout  time.Duration `yaml:"read_timeout"`
 	WriteTimeout time.Duration `yaml:"write_timeout"`
 }
 
 // DatabaseConfig 数据库配置
 type DatabaseConfig struct {
-	Driver          string        `yaml:"driver"` // mysql / sqlite
+	Driver          string        `yaml:"driver"` // 只支持 mysql
 	Host            string        `yaml:"host"`
 	Port            int           `yaml:"port"`
 	Name            string        `yaml:"name"`
@@ -47,20 +48,12 @@ type DatabaseConfig struct {
 	MaxOpenConns    int           `yaml:"max_open_conns"`
 	MaxIdleConns    int           `yaml:"max_idle_conns"`
 	ConnMaxLifetime time.Duration `yaml:"conn_max_lifetime"`
-	Charset         string        `yaml:"charset"`    // MySQL 字符集，默认 utf8mb4
-	ParseTime       bool          `yaml:"parse_time"` // MySQL 时间解析，默认 true
-	// SQLite only
-	DSN string `yaml:"dsn"`
+	Charset         string        `yaml:"charset"`    // 默认 utf8mb4
+	ParseTime       bool          `yaml:"parse_time"` // 默认 true
 }
 
-// DSNString 生成 GORM DSN
+// DSNString 生成 MySQL GORM DSN
 func (c DatabaseConfig) DSNString() string {
-	if c.Driver == "sqlite" || c.Driver == "sqlite3" {
-		if c.DSN != "" {
-			return c.DSN
-		}
-		return "mtap.db"
-	}
 	// MySQL DSN: user:pass@tcp(host:port)/dbname?charset=utf8mb4&parseTime=True&loc=Local
 	charset := c.Charset
 	if charset == "" {
@@ -164,8 +157,12 @@ func defaultConfig() *Config {
 			WriteTimeout: 10 * time.Second,
 		},
 		Database: DatabaseConfig{
-			Driver:          "sqlite", // 开发默认 sqlite，生产改为 mysql
-			DSN:             "mtap.db",
+			Driver:          "mysql",
+			Host:            "127.0.0.1",
+			Port:            3306,
+			Name:            "mtap",
+			User:            "root",
+			Password:        "",
 			MaxOpenConns:    50,
 			MaxIdleConns:    10,
 			ConnMaxLifetime: time.Hour,
@@ -232,13 +229,6 @@ func overrideFromEnv(cfg *Config) {
 		if port, err := strconv.Atoi(v); err == nil {
 			cfg.Server.Port = port
 		}
-	}
-	if v := os.Getenv("MTAP_DB_DSN"); v != "" {
-		cfg.Database.DSN = v
-		cfg.Database.Driver = "sqlite"
-	}
-	if v := os.Getenv("MTAP_DB_DRIVER"); v != "" {
-		cfg.Database.Driver = v
 	}
 	if v := os.Getenv("MTAP_DB_HOST"); v != "" {
 		cfg.Database.Host = v

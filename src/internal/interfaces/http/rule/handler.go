@@ -63,7 +63,9 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 
 		// 排序策略
 		adminOnly.POST("/sorting-strategies", h.SaveSortingStrategy)
-		operatorPlus.GET("/sorting-strategies", h.GetSortingStrategy)
+		operatorPlus.GET("/sorting-strategies", h.ListSortingStrategies)
+		operatorPlus.GET("/sorting-strategies/match", h.GetSortingStrategy)
+		adminOnly.DELETE("/sorting-strategies/:id", h.DeleteSortingStrategy)
 
 		// 患者属性适配
 		adminOnly.POST("/patient-adapt", h.SavePatientAdaptRules)
@@ -345,6 +347,15 @@ func (h *Handler) SaveSortingStrategy(c *gin.Context) {
 	response.Created(c, resp)
 }
 
+func (h *Handler) ListSortingStrategies(c *gin.Context) {
+	resp, err := h.appService.ListSortingStrategies(c.Request.Context())
+	if err != nil {
+		response.FailWithError(c, err)
+		return
+	}
+	response.OKWithData(c, map[string]interface{}{"items": resp})
+}
+
 func (h *Handler) GetSortingStrategy(c *gin.Context) {
 	var scope appRule.EffectiveScopeDTO
 	if err := c.ShouldBindQuery(&scope); err != nil {
@@ -359,6 +370,23 @@ func (h *Handler) GetSortingStrategy(c *gin.Context) {
 }
 
 // === 患者属性适配 ===
+
+func (h *Handler) DeleteSortingStrategy(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.appService.DeleteSortingStrategy(c.Request.Context(), id); err != nil {
+		response.FailWithError(c, err)
+		return
+	}
+	_ = logger.Audit(c.Request.Context(), logger.AuditEntry{
+		OperatorID: c.GetString("user_id"),
+		Action:     "delete",
+		Resource:   "sorting_strategy",
+		ResourceID: id,
+		IP:         c.ClientIP(),
+		Timestamp:  time.Now(),
+	})
+	response.OK(c)
+}
 
 func (h *Handler) SavePatientAdaptRules(c *gin.Context) {
 	var req []appRule.SavePatientAdaptRuleReq

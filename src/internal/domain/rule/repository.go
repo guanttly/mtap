@@ -46,6 +46,7 @@ type PriorityTagRepository interface {
 type SortingStrategyRepository interface {
 	Save(ctx context.Context, strategy *SortingStrategy) error
 	FindByID(ctx context.Context, id string) (*SortingStrategy, error)
+	FindAll(ctx context.Context) ([]*SortingStrategy, error)
 	FindByScope(ctx context.Context, scope EffectiveScope) ([]*SortingStrategy, error)
 	Update(ctx context.Context, strategy *SortingStrategy) error
 	Delete(ctx context.Context, id string) error

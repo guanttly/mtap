@@ -9,7 +9,6 @@ import (
 
 	"github.com/robfig/cron/v3"
 	"gorm.io/driver/mysql"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
 	infraConfig "github.com/euler/mtap/internal/infrastructure/config"
@@ -30,12 +29,7 @@ func main() {
 
 	// 初始化数据库
 	var db *gorm.DB
-	switch cfg.Database.Driver {
-	case "mysql":
-		db, err = gorm.Open(mysql.Open(cfg.Database.DSNString()), &gorm.Config{})
-	default:
-		db, err = gorm.Open(sqlite.Open(cfg.Database.DSNString()), &gorm.Config{})
-	}
+	db, err = gorm.Open(mysql.Open(cfg.Database.DSNString()), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("open db failed: %v", err)
 	}

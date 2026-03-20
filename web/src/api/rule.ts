@@ -1,17 +1,17 @@
-import http, { type PageResult } from './request'
 import type {
-  ConflictRule,
-  ConflictPackage,
-  CreateConflictPackageReq,
-  UpdateConflictPackageReq,
-  DependencyRule,
-  PriorityTag,
-  SortingStrategy,
   CheckRulesReq,
   CheckRulesResp,
+  ConflictPackage,
+  ConflictRule,
+  CreateConflictPackageReq,
+  DependencyRule,
   PatientAdaptRule,
+  PriorityTag,
+  SortingStrategy,
   SourceControl,
+  UpdateConflictPackageReq,
 } from '@/types/rule'
+import http, { type PageResult } from './request'
 
 export const ruleApi = {
   // 冲突规则
@@ -40,8 +40,14 @@ export const ruleApi = {
   deletePriorityTag: (id: string) => http.delete<any, void>(`/rules/priority-tags/${id}`),
 
   // 排序策略
-  saveSortingStrategy: (data: Partial<SortingStrategy>) => http.post<any, SortingStrategy>('/rules/sorting-strategies', data),
-  getSortingStrategy: () => http.get<any, SortingStrategy>('/rules/sorting-strategies'),
+  saveSortingStrategy: (data: {
+    type: string
+    scope: { campus_ids: string[], department_ids: string[], device_ids: string[] }
+    start_date: string
+    end_date: string
+  }) => http.post<any, SortingStrategy>('/rules/sorting-strategies', data),
+  listSortingStrategies: () => http.get<any, { items: SortingStrategy[] }>('/rules/sorting-strategies'),
+  deleteSortingStrategy: (id: string) => http.delete<any, void>(`/rules/sorting-strategies/${id}`),
 
   // 患者属性适配
   listPatientAdaptRules: () => http.get<any, { items: PatientAdaptRule[] }>('/rules/patient-adapt'),

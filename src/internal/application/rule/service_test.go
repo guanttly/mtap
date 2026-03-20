@@ -180,12 +180,17 @@ func (m *mockSortingRepo) Save(_ context.Context, s *domain.SortingStrategy) err
 	m.items = append(m.items, s)
 	return nil
 }
-func (m *mockSortingRepo) FindByID(_ context.Context, _ string) (*domain.SortingStrategy, error) { return nil, nil }
+func (m *mockSortingRepo) FindByID(_ context.Context, _ string) (*domain.SortingStrategy, error) {
+	return nil, nil
+}
+func (m *mockSortingRepo) FindAll(_ context.Context) ([]*domain.SortingStrategy, error) {
+	return m.items, nil
+}
 func (m *mockSortingRepo) FindByScope(_ context.Context, _ domain.EffectiveScope) ([]*domain.SortingStrategy, error) {
 	return m.items, nil
 }
 func (m *mockSortingRepo) Update(_ context.Context, _ *domain.SortingStrategy) error { return nil }
-func (m *mockSortingRepo) Delete(_ context.Context, _ string) error                 { return nil }
+func (m *mockSortingRepo) Delete(_ context.Context, _ string) error                  { return nil }
 
 type mockAdaptRepo struct {
 	rules []*domain.PatientAdaptRule
@@ -195,7 +200,9 @@ func (m *mockAdaptRepo) SaveAll(_ context.Context, rules []*domain.PatientAdaptR
 	m.rules = rules
 	return nil
 }
-func (m *mockAdaptRepo) FindAll(_ context.Context) ([]*domain.PatientAdaptRule, error) { return m.rules, nil }
+func (m *mockAdaptRepo) FindAll(_ context.Context) ([]*domain.PatientAdaptRule, error) {
+	return m.rules, nil
+}
 func (m *mockAdaptRepo) DeleteAll(_ context.Context) error {
 	m.rules = nil
 	return nil
@@ -209,7 +216,9 @@ func (m *mockSourceRepo) SaveAll(_ context.Context, controls []*domain.SourceCon
 	m.controls = controls
 	return nil
 }
-func (m *mockSourceRepo) FindAll(_ context.Context) ([]*domain.SourceControl, error) { return m.controls, nil }
+func (m *mockSourceRepo) FindAll(_ context.Context) ([]*domain.SourceControl, error) {
+	return m.controls, nil
+}
 func (m *mockSourceRepo) DeleteAll(_ context.Context) error {
 	m.controls = nil
 	return nil

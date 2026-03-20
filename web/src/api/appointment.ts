@@ -1,5 +1,5 @@
+import type { Appeal, Appointment, AutoAppointmentReq, BlacklistRecord, Credential } from '@/types/appointment'
 import http, { type PageResult } from './request'
-import type { Appointment, Credential, BlacklistRecord, Appeal, AutoAppointmentReq } from '@/types/appointment'
 
 export const appointmentApi = {
   // 预约列表

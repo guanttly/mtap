@@ -72,12 +72,16 @@ export interface PriorityTag {
   created_at: string
 }
 
+export interface SortingStrategyScope {
+  campus_ids: string[]
+  department_ids: string[]
+  device_ids: string[]
+}
+
 export interface SortingStrategy {
   id: string
   type: 'shortest_wait' | 'nearest' | 'priority'
-  scope_campuses: string[]
-  scope_depts: string[]
-  scope_devices: string[]
+  scope: SortingStrategyScope
   start_date: string
   end_date: string
   status: RuleStatus

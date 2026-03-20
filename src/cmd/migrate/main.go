@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"gorm.io/driver/mysql"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
 	infraConfig "github.com/euler/mtap/internal/infrastructure/config"
@@ -24,16 +23,11 @@ func main() {
 	}
 
 	var db *gorm.DB
-	switch cfg.Database.Driver {
-	case "mysql":
-		db, err = gorm.Open(mysql.Open(cfg.Database.DSNString()), &gorm.Config{})
-	default:
-		db, err = gorm.Open(sqlite.Open(cfg.Database.DSNString()), &gorm.Config{})
-	}
+	db, err = gorm.Open(mysql.Open(cfg.Database.DSNString()), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("open db failed: %v", err)
 	}
-	log.Printf("数据库迁移开始，驱动: %s", cfg.Database.Driver)
+	log.Printf("数据库迁移开始，驱动: mysql")
 
 	if err := db.AutoMigrate(
 		// 用户权限

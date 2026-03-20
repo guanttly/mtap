@@ -20,6 +20,8 @@ const router = createRouter({
                 { path: 'rule/dependencies', name: 'DependencyRuleList', component: () => import('@/views/rule/DependencyRuleList.vue'), meta: { title: '依赖规则' } },
                 { path: 'rule/priority-tags', name: 'PriorityTagList', component: () => import('@/views/rule/PriorityTagList.vue'), meta: { title: '优先级标签' } },
                 { path: 'rule/sorting-strategy', name: 'SortingStrategyForm', component: () => import('@/views/rule/SortingStrategyForm.vue'), meta: { title: '排序策略' } },
+                { path: 'rule/patient-adapt', name: 'PatientAdaptRuleList', component: () => import('@/views/rule/PatientAdaptRuleList.vue'), meta: { title: '患者适配规则' } },
+                { path: 'rule/source-controls', name: 'SourceControlList', component: () => import('@/views/rule/SourceControlList.vue'), meta: { title: '开单来源控制' } },
                 // 资源管理
                 { path: 'resource/devices', name: 'DeviceList', component: () => import('@/views/resource/DeviceList.vue'), meta: { title: '设备管理' } },
                 { path: 'resource/exam-items', name: 'ExamItemList', component: () => import('@/views/resource/ExamItemList.vue'), meta: { title: '检查项目' } },

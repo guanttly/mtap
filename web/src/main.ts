@@ -2,7 +2,6 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import Antd from 'ant-design-vue'
 import 'ant-design-vue/dist/reset.css'
-import '@unocss/reset/tailwind.css'
 import 'virtual:uno.css'
 
 import App from './App.vue'

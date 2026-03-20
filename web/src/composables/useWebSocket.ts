@@ -18,6 +18,8 @@ export function useWebSocket<T = unknown>(path: string) {
   let ws: WebSocket | null = null
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null
   let shouldReconnect = true
+  let reconnectCount = 0
+  const MAX_RECONNECT = 5  // 最多重连 5 次，防止服务不可用时刷屏控制台
 
   function connect() {
     const userStore = useUserStore()
@@ -28,7 +30,10 @@ export function useWebSocket<T = unknown>(path: string) {
     status.value = 'connecting'
     ws = new WebSocket(url)
 
-    ws.onopen = () => { status.value = 'connected' }
+    ws.onopen = () => {
+      status.value = 'connected'
+      reconnectCount = 0  // 连接成功后重置计数器
+    }
 
     ws.onmessage = (event) => {
       try {
@@ -44,8 +49,9 @@ export function useWebSocket<T = unknown>(path: string) {
 
     ws.onclose = () => {
       status.value = 'disconnected'
-      if (shouldReconnect) {
-        reconnectTimer = setTimeout(connect, 3000)
+      if (shouldReconnect && reconnectCount < MAX_RECONNECT) {
+        reconnectCount++
+        reconnectTimer = setTimeout(connect, 3000 * reconnectCount) // 退刯重连
       }
     }
   }

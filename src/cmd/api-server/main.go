@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"gorm.io/driver/mysql"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
 	appAnalytics "github.com/euler/mtap/internal/application/analytics"
@@ -51,16 +50,7 @@ func main() {
 
 	// 初始化数据库
 	var db *gorm.DB
-	switch cfg.Database.Driver {
-	case "mysql":
-		db, err = gorm.Open(mysql.Open(cfg.Database.DSNString()), &gorm.Config{})
-	default:
-		dbPath := cfg.Database.DSNString()
-		if v := os.Getenv("MTAP_DB"); v != "" {
-			dbPath = v
-		}
-		db, err = gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
-	}
+	db, err = gorm.Open(mysql.Open(cfg.Database.DSNString()), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("open db failed: %v", err)
 	}

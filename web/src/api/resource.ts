@@ -1,5 +1,5 @@
+import type { Device, ExamItem, ItemAlias, Schedule, SlotPool, TimeSlot } from '@/types/resource'
 import http, { type PageResult } from './request'
-import type { Device, ExamItem, ItemAlias, SlotPool, Schedule, TimeSlot } from '@/types/resource'
 
 export const resourceApi = {
   // 设备

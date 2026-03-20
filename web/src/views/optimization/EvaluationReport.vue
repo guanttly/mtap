@@ -67,7 +67,7 @@ const trialColumns = [
           <a-col :span="12">
             <a-card title="基准指标" size="small">
               <a-table
-                :data-source="Object.entries(report.baseline_metrics).map(([k, v]) => ({ key: k, value: v }))"
+                :data-source="Object.entries(report.baseline_metrics ?? {}).map(([k, v]) => ({ key: k, value: v }))"
                 :columns="baselineColumns"
                 :pagination="false"
                 size="small"
@@ -77,7 +77,7 @@ const trialColumns = [
           <a-col :span="12">
             <a-card title="试运行指标" size="small">
               <a-table
-                :data-source="Object.entries(report.trial_metrics).map(([k, v]) => ({ key: k, value: v, change: report!.change_pct[k] }))"
+                :data-source="Object.entries(report.trial_metrics ?? {}).map(([k, v]) => ({ key: k, value: v, change: report!.change_pct?.[k] }))"
                 :columns="trialColumns"
                 :pagination="false"
                 size="small"

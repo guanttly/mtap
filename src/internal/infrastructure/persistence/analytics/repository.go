@@ -122,8 +122,8 @@ func (r *dashboardRepo) GetWaitTrend(ctx context.Context, campusID string, point
 
 	var rows []trendRow
 	if err := r.db.WithContext(ctx).
-		Raw(`SELECT CAST(strftime('%H', qe.entered_at) AS INTEGER) AS hour,
-				 AVG((CAST(strftime('%s', qe.called_at) AS REAL) - CAST(strftime('%s', qe.entered_at) AS REAL))/60.0) AS avg_wait_min
+		Raw(`SELECT HOUR(qe.entered_at) AS hour,
+				 AVG(TIMESTAMPDIFF(SECOND, qe.entered_at, qe.called_at)/60.0) AS avg_wait_min
 			 FROM queue_entries qe
 			 WHERE qe.entered_at >= ? AND qe.called_at IS NOT NULL
 			 GROUP BY hour ORDER BY hour DESC LIMIT ?`, dayStart, points).
@@ -181,7 +181,7 @@ func (r *dashboardRepo) GetDeviceDetail(ctx context.Context, deviceID string, da
 	}
 	var slotRows []slotRow
 	_ = r.db.WithContext(ctx).
-		Raw(`SELECT CAST(strftime('%H', start_at) AS INTEGER) AS hour,
+		Raw(`SELECT HOUR(start_at) AS hour,
 				 COUNT(*) AS total,
 				 SUM(CASE WHEN status NOT IN ('available') THEN 1 ELSE 0 END) AS used
 			 FROM time_slots
@@ -208,9 +208,9 @@ func (r *dashboardRepo) GetDeviceDetail(ctx context.Context, deviceID string, da
 	_ = r.db.WithContext(ctx).
 		Raw(`SELECT COUNT(*) AS total_checked_in,
 				 COALESCE(AVG(CASE WHEN qe.called_at IS NOT NULL
-					 THEN (CAST(strftime('%s',qe.called_at) AS REAL)-CAST(strftime('%s',qe.entered_at) AS REAL))/60.0 END),0) AS avg_wait_min,
+					 THEN TIMESTAMPDIFF(SECOND, qe.entered_at, qe.called_at)/60.0 END),0) AS avg_wait_min,
 				 COALESCE(MAX(CASE WHEN qe.called_at IS NOT NULL
-					 THEN (CAST(strftime('%s',qe.called_at) AS REAL)-CAST(strftime('%s',qe.entered_at) AS REAL))/60.0 END),0) AS max_wait_min,
+					 THEN TIMESTAMPDIFF(SECOND, qe.entered_at, qe.called_at)/60.0 END),0) AS max_wait_min,
 				 SUM(CASE WHEN qe.status='no_show' THEN 1 ELSE 0 END) AS no_show_count
 			 FROM queue_entries qe
 			 JOIN waiting_queues wq ON qe.queue_id = wq.id

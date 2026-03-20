@@ -12,7 +12,7 @@ async function fetchData() {
   loading.value = true
   try {
     const res = await optimizationApi.listMetrics()
-    metrics.value = res.items
+    metrics.value = res?.items ?? []
   }
   finally { loading.value = false }
 }

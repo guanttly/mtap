@@ -34,9 +34,9 @@ export function usePagination<T>(
         ...extraParams.value,
         ...params,
       })
-      items.value = res.items
-      total.value = res.total
-      pagination.total = res.total
+      items.value = res?.items ?? []
+      total.value = res?.total ?? 0
+      pagination.total = res?.total ?? 0
     }
     finally {
       loading.value = false

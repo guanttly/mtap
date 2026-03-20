@@ -7,7 +7,7 @@ import "time"
 type RolePO struct {
 	ID          string    `gorm:"column:id;primaryKey;size:36"`
 	Name        string    `gorm:"column:name;not null;size:30;uniqueIndex"`
-	Permissions string    `gorm:"column:permissions;type:text;not null;default:'[]'"` // JSON数组
+	Permissions string    `gorm:"column:permissions;type:text;not null"` // JSON数组，写入时由应用层保证不为空（最小值 "[]"）
 	IsPreset    bool      `gorm:"column:is_preset;not null;default:false"`
 	CreatedAt   time.Time `gorm:"column:created_at;autoCreateTime"`
 	UpdatedAt   time.Time `gorm:"column:updated_at;autoUpdateTime"`

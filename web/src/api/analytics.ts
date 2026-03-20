@@ -1,5 +1,5 @@
-import http, { type PageResult } from './request'
 import type { DashboardSnapshot, DeviceDetail, GenerateReportRequest, Report } from '@/types/analytics'
+import http, { type PageResult } from './request'
 
 export const analyticsApi = {
   getDashboard: (campusId?: string) =>

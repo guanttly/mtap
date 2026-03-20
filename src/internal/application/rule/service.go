@@ -443,6 +443,25 @@ func (s *RuleAppService) GetSortingStrategy(ctx context.Context, scopeDTO Effect
 	return SortingStrategyToResp(best), nil
 }
 
+func (s *RuleAppService) ListSortingStrategies(ctx context.Context) ([]SortingStrategyResp, error) {
+	list, err := s.sortingRepo.FindAll(ctx)
+	if err != nil {
+		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	resp := make([]SortingStrategyResp, 0, len(list))
+	for _, st := range list {
+		resp = append(resp, *SortingStrategyToResp(st))
+	}
+	return resp, nil
+}
+
+func (s *RuleAppService) DeleteSortingStrategy(ctx context.Context, id string) error {
+	if err := s.sortingRepo.Delete(ctx, id); err != nil {
+		return bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	return nil
+}
+
 // === 患者属性适配 ===
 
 func (s *RuleAppService) SavePatientAdaptRules(ctx context.Context, req []SavePatientAdaptRuleReq) error {

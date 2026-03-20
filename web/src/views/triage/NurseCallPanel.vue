@@ -15,7 +15,12 @@ const callLoading = ref(false)
 async function fetchStatus() {
   loading.value = true
   try {
-    status.value = await triageApi.getQueueStatus(roomId.value)
+    const res = await triageApi.getQueueStatus(roomId.value)
+    // 确保 entries 始终是数组，防止 a-list 收到 null/undefined 崩溃
+    status.value = { ...res, entries: res?.entries ?? [] }
+  }
+  catch {
+    // 接口异常时保持现有数据，不覆盖 status
   }
   finally { loading.value = false }
 }
@@ -27,6 +32,7 @@ async function callNext() {
     message.success(`呼叫: ${callResult.value.patient_name_masked}`)
     fetchStatus()
   }
+  catch { /* 错误已由拦截器弹出 */ }
   finally { callLoading.value = false }
 }
 
@@ -36,13 +42,17 @@ async function recall() {
     callResult.value = await triageApi.recall(roomId.value)
     message.info('已重新呼叫')
   }
+  catch { /* 错误已由拦截器弹出 */ }
   finally { callLoading.value = false }
 }
 
 async function miss() {
-  await triageApi.missAndRequeue(roomId.value)
-  message.warning('标记为过号，已重新排队')
-  fetchStatus()
+  try {
+    await triageApi.missAndRequeue(roomId.value)
+    message.warning('标记为过号，已重新排队')
+    fetchStatus()
+  }
+  catch { /* 错误已由拦截器弹出 */ }
 }
 
 onMounted(fetchStatus)
@@ -73,9 +83,9 @@ onMounted(fetchStatus)
       </a-col>
       <a-col :span="10">
         <a-card title="等候队列" size="small" :loading="loading">
-          <a-list v-if="status" :data-source="status.entries" size="small">
+          <a-list v-if="status" :data-source="status.entries ?? []" size="small">
             <template #renderItem="{ item, index }">
-              <a-list-item>
+              <a-list-item v-if="item">
                 <span style="font-size: 18px; font-weight: 700; color: #1890ff; width: 28px; display: inline-block;">{{ index + 1 }}</span>
                 <span style="flex: 1;">{{ item.patient_name_masked }}</span>
                 <span class="text-muted" style="font-size: 12px;">{{ item.queue_number }}</span>

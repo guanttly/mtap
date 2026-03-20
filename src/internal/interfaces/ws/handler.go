@@ -39,8 +39,15 @@ func NewHandler(hub *Hub) *Handler {
 // RegisterRoutes 注册 WebSocket 路由
 func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	ws := r.Group("/ws")
-	ws.GET("/triage/:roomId", h.TriageScreen)
+	ws.GET("/triage", h.TriageScreenAll)      // 分诊大屏全局频道
+	ws.GET("/triage/:roomId", h.TriageScreen) // 指定房间
 	ws.GET("/dashboard", h.Dashboard)
+}
+
+// TriageScreenAll 分诊大屏全局 WebSocket 端点（订阅所有分诊事件）
+// GET /ws/triage
+func (h *Handler) TriageScreenAll(c *gin.Context) {
+	h.serveWS(c.Writer, c.Request, ChannelTriage)
 }
 
 // TriageScreen 分诊大屏 WebSocket 端点

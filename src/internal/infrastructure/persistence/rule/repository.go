@@ -106,7 +106,9 @@ func (r *ConflictRuleRepo) Delete(ctx context.Context, id string) error {
 
 type ConflictPackageRepo struct{ db *gorm.DB }
 
-func (r *Repositories) ConflictPackageRepo() *ConflictPackageRepo { return &ConflictPackageRepo{db: r.DB} }
+func (r *Repositories) ConflictPackageRepo() *ConflictPackageRepo {
+	return &ConflictPackageRepo{db: r.DB}
+}
 
 func (r *ConflictPackageRepo) Save(ctx context.Context, pkg *domain.ConflictPackage) error {
 	p := po.ConflictPackagePO{
@@ -122,8 +124,8 @@ func (r *ConflictPackageRepo) Save(ctx context.Context, pkg *domain.ConflictPack
 	items := make([]po.ConflictPackageItemPO, 0, len(pkg.Items))
 	for _, it := range pkg.Items {
 		items = append(items, po.ConflictPackageItemPO{
-			ID:        uuid.New().String(),
-			PackageID: pkg.ID,
+			ID:         uuid.New().String(),
+			PackageID:  pkg.ID,
 			ExamItemID: it.ExamItemID,
 		})
 	}
@@ -342,7 +344,9 @@ func (r *PriorityTagRepo) Delete(ctx context.Context, id string) error {
 
 type SortingStrategyRepo struct{ db *gorm.DB }
 
-func (r *Repositories) SortingStrategyRepo() *SortingStrategyRepo { return &SortingStrategyRepo{db: r.DB} }
+func (r *Repositories) SortingStrategyRepo() *SortingStrategyRepo {
+	return &SortingStrategyRepo{db: r.DB}
+}
 
 func (r *SortingStrategyRepo) Save(ctx context.Context, strategy *domain.SortingStrategy) error {
 	campusJSON, _ := json.Marshal(strategy.Scope.CampusIDs)
@@ -374,6 +378,18 @@ func (r *SortingStrategyRepo) FindByID(ctx context.Context, id string) (*domain.
 	return sortingStrategyFromPO(p), nil
 }
 
+func (r *SortingStrategyRepo) FindAll(ctx context.Context) ([]*domain.SortingStrategy, error) {
+	var ps []po.SortingStrategyPO
+	if err := r.db.WithContext(ctx).Order("created_at DESC").Find(&ps).Error; err != nil {
+		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	out := make([]*domain.SortingStrategy, 0, len(ps))
+	for _, p := range ps {
+		out = append(out, sortingStrategyFromPO(p))
+	}
+	return out, nil
+}
+
 func (r *SortingStrategyRepo) FindByScope(ctx context.Context, scope domain.EffectiveScope) ([]*domain.SortingStrategy, error) {
 	// 简化：先全量查，再用 JSON scope 精确匹配（避免依赖特定 DB 的 JSONB 能力）
 	var ps []po.SortingStrategyPO
@@ -395,7 +411,7 @@ func (r *SortingStrategyRepo) Update(ctx context.Context, strategy *domain.Sorti
 	deptJSON, _ := json.Marshal(strategy.Scope.DepartmentIDs)
 	deviceJSON, _ := json.Marshal(strategy.Scope.DeviceIDs)
 	return r.db.WithContext(ctx).Model(&po.SortingStrategyPO{}).Where("id = ?", strategy.ID).Updates(map[string]interface{}{
-		"type":          string(strategy.Type),
+		"type":           string(strategy.Type),
 		"scope_campuses": string(campusJSON),
 		"scope_depts":    string(deptJSON),
 		"scope_devices":  string(deviceJSON),
@@ -414,7 +430,9 @@ func (r *SortingStrategyRepo) Delete(ctx context.Context, id string) error {
 
 type PatientAdaptRuleRepo struct{ db *gorm.DB }
 
-func (r *Repositories) PatientAdaptRuleRepo() *PatientAdaptRuleRepo { return &PatientAdaptRuleRepo{db: r.DB} }
+func (r *Repositories) PatientAdaptRuleRepo() *PatientAdaptRuleRepo {
+	return &PatientAdaptRuleRepo{db: r.DB}
+}
 
 func (r *PatientAdaptRuleRepo) SaveAll(ctx context.Context, rules []*domain.PatientAdaptRule) error {
 	ps := make([]po.PatientAdaptRulePO, 0, len(rules))

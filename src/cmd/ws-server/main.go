@@ -68,7 +68,7 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
-	port := cfg.Server.Port
+	port := cfg.Server.WSPort
 	if port == 0 {
 		port = 8081
 	}

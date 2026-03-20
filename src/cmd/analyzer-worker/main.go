@@ -11,7 +11,6 @@ import (
 	"syscall"
 
 	"gorm.io/driver/mysql"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
 	domainOpt "github.com/euler/mtap/internal/domain/optimization"
@@ -33,12 +32,7 @@ func main() {
 
 	// 初始化数据库
 	var db *gorm.DB
-	switch cfg.Database.Driver {
-	case "mysql":
-		db, err = gorm.Open(mysql.Open(cfg.Database.DSNString()), &gorm.Config{})
-	default:
-		db, err = gorm.Open(sqlite.Open(cfg.Database.DSNString()), &gorm.Config{})
-	}
+	db, err = gorm.Open(mysql.Open(cfg.Database.DSNString()), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("[AnalyzerWorker] 数据库连接失败: %v", err)
 	}

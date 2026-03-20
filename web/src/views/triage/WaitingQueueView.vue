@@ -20,8 +20,10 @@ const STATUS_LABEL: Record<string, string> = {
 async function fetchStatus() {
   loading.value = true
   try {
-    status.value = await triageApi.getQueueStatus(roomId.value)
+    const res = await triageApi.getQueueStatus(roomId.value)
+    status.value = { ...res, entries: res?.entries ?? [] }
   }
+  catch { /* 错误已由拦截器弹出 */ }
   finally { loading.value = false }
 }
 
@@ -48,7 +50,7 @@ onUnmounted(() => { if (timer) clearInterval(timer) })
       </a-row>
 
       <a-card title="当前队列" size="small">
-        <a-list :data-source="status.entries" size="small">
+        <a-list :data-source="status.entries ?? []" size="small">
           <template #renderItem="{ item, index }">
             <a-list-item>
               <a-list-item-meta>

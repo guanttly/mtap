@@ -109,7 +109,7 @@ onUnmounted(() => {
         <!-- 设备状态 -->
         <a-card title="设备运行状态" size="small">
           <a-table
-            :data-source="snapshot.device_status"
+            :data-source="snapshot.device_status ?? []"
             :columns="[
               { title: '设备', dataIndex: 'device_name', key: 'device_name' },
               { title: '状态', dataIndex: 'status', key: 'status' },
