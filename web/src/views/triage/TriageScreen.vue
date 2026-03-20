@@ -6,6 +6,9 @@ import { triageApi } from '@/api/triage'
 import { useWebSocket } from '@/composables/useWebSocket'
 import type { QueueStatus, CallResult } from '@/types/triage'
 
+// 独立大屏：设置页面标题，适合全屏投影
+document.title = '医技分诊大屏'
+
 const rooms = ['room-001', 'room-002', 'room-003']
 const statusMap = ref<Record<string, QueueStatus>>({})
 const currentCall = ref<CallResult | null>(null)

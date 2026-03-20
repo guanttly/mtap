@@ -110,6 +110,10 @@ function onOpenChange(keys: string[]) {
 }
 
 function onMenuClick({ key }: { key: string }) {
+  if (key === '/triage/screen') {
+    window.open('/triage/screen', '_blank')
+    return
+  }
   router.push(key)
 }
 </script>

@@ -39,7 +39,6 @@ const router = createRouter({
         { path: 'triage/checkin', name: 'CheckInStation', component: () => import('@/views/triage/CheckInStation.vue'), meta: { title: '签到站' } },
         { path: 'triage/queue', name: 'WaitingQueueView', component: () => import('@/views/triage/WaitingQueueView.vue'), meta: { title: '候诊队列' } },
         { path: 'triage/call', name: 'NurseCallPanel', component: () => import('@/views/triage/NurseCallPanel.vue'), meta: { title: '护士呼叫' } },
-        { path: 'triage/screen', name: 'TriageScreen', component: () => import('@/views/triage/TriageScreen.vue'), meta: { title: '分诊大屏' } },
         // 统计分析
         { path: 'analytics/dashboard', name: 'Dashboard', component: () => import('@/views/analytics/Dashboard.vue'), meta: { title: '实时监控' } },
         { path: 'analytics/report', name: 'ReportExport', component: () => import('@/views/analytics/ReportExport.vue'), meta: { title: '报表导出' } },
@@ -57,6 +56,8 @@ const router = createRouter({
         { path: 'admin/roles', name: 'RoleManagement', component: () => import('@/views/admin/RoleList.vue'), meta: { title: '角色管理' } },
       ],
     },
+    // 大屏独立路由（无侧边栏/顶栏，适合投屏/全屏展示）
+    { path: '/triage/screen', name: 'TriageScreen', component: () => import('@/views/triage/TriageScreen.vue'), meta: { title: '分诊大屏' } },
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
 })

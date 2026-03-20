@@ -9,6 +9,8 @@ export default defineConfig({
     UnoCSS(),
   ],
   resolve: {
+    // 确保 .ts 优先于 .js 解析，防止同名文件互相遮蔽
+    extensions: ['.ts', '.tsx', '.mts', '.mjs', '.js', '.jsx', '.vue', '.json'],
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
