@@ -126,15 +126,27 @@ function onMenuClick({ key }: { key: string }) {
 </script>
 
 <template>
-  <a-layout-sider v-model:collapsed="collapsed" collapsible :width="220" style="background: #001529; height: 100vh; position: sticky; top: 0; flex-shrink: 0;">
-    <div style="height: 48px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; font-size: 16px; overflow: hidden; padding: 0 8px;">
-      <span v-if="!collapsed">MTAP</span>
-      <span v-else>M</span>
-    </div>
-    <!-- calc: 100vh - 48px logo - 48px collapse trigger -->
-    <div style="height: calc(100vh - 96px); overflow-y: auto; overflow-x: hidden;">
+  <a-layout-sider
+    v-model:collapsed="collapsed"
+    :trigger="null"
+    :width="220"
+    :collapsed-width="64"
+    class="app-sider"
+  >
+    <!-- 浮动折叠按钮：贴在侧边栏右边缘 -->
+    <button
+      class="sider-collapse-toggle"
+      @click="collapsed = !collapsed"
+      :title="collapsed ? '展开侧边栏' : '收起侧边栏'"
+    >
+      <svg width="11" height="11" viewBox="0 0 1024 1024" class="collapse-icon" :class="{ 'is-collapsed': collapsed }">
+        <path fill="currentColor" d="M724 218.3V141c0-6.7-7.7-10.4-12.9-6.3L260.3 486.8a31.86 31.86 0 0 0 0 50.3l450.8 352.1c5.3 4.1 12.9.4 12.9-6.3v-77.3c0-4.9-2.3-9.6-6.1-12.6l-360-281 360-281.1c3.8-3 6.1-7.7 6.1-12.6z"/>
+      </svg>
+    </button>
+    <!-- 菜单区域 -->
+    <div class="sider-scroll">
       <a-menu
-        theme="dark"
+        theme="light"
         mode="inline"
         :selected-keys="selectedKeys"
         :open-keys="openKeys"
@@ -145,3 +157,44 @@ function onMenuClick({ key }: { key: string }) {
     </div>
   </a-layout-sider>
 </template>
+
+<style scoped>
+/* 浮动折叠按钮：半圆形贴在右边缘 */
+.sider-collapse-toggle {
+  position: absolute;
+  top: 14px;
+  right: -13px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid #e8ecf0;
+  border-radius: 50%;
+  background: #fff;
+  color: #b0bdd0;
+  cursor: pointer;
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.06);
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+  padding: 0;
+}
+.sider-collapse-toggle:hover {
+  background: #f0f5ff;
+  color: #1260c8;
+  box-shadow: 2px 0 8px rgba(18, 96, 200, 0.15);
+}
+.collapse-icon {
+  flex-shrink: 0;
+  transition: transform 0.22s ease;
+}
+.collapse-icon.is-collapsed {
+  transform: rotate(180deg);
+}
+/* 菜单滚动区 */
+.sider-scroll {
+  height: calc(100vh - 56px);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+</style>

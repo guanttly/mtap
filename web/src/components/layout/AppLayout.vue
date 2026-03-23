@@ -23,11 +23,11 @@ onErrorCaptured((err: unknown) => {
 </script>
 
 <template>
-  <a-layout style="height: 100vh; overflow: hidden">
-    <Sidebar />
-    <a-layout style="overflow: hidden">
-      <AppHeader :title="pageTitle" />
-      <a-layout-content style="margin: 0; overflow-y: auto; min-height: 0; background: #f0f2f5;">
+  <a-layout style="height: 100vh; overflow: hidden; flex-direction: column;">
+    <AppHeader :title="pageTitle" />
+    <a-layout style="overflow: hidden; flex: 1; min-height: 0;">
+      <Sidebar />
+      <a-layout-content style="margin: 0; overflow-y: auto; min-height: 0; background: #f5f7fb;">
         <div class="page-container">
           <router-view :key="routerKey" />
         </div>
