@@ -2,6 +2,7 @@ package resource
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 	"time"
 
@@ -27,6 +28,8 @@ type ScheduleRepo struct{ db *gorm.DB }
 type TimeSlotRepo struct{ db *gorm.DB }
 type CampusRepo struct{ db *gorm.DB }
 type DepartmentRepo struct{ db *gorm.DB }
+type DoctorRepo struct{ db *gorm.DB }
+type ScheduleTemplateRepo struct{ db *gorm.DB }
 
 func (r *Repositories) DeviceRepo() *DeviceRepo         { return &DeviceRepo{db: r.DB} }
 func (r *Repositories) ExamItemRepo() *ExamItemRepo     { return &ExamItemRepo{db: r.DB} }
@@ -36,15 +39,24 @@ func (r *Repositories) ScheduleRepo() *ScheduleRepo     { return &ScheduleRepo{d
 func (r *Repositories) TimeSlotRepo() *TimeSlotRepo     { return &TimeSlotRepo{db: r.DB} }
 func (r *Repositories) CampusRepo() *CampusRepo         { return &CampusRepo{db: r.DB} }
 func (r *Repositories) DepartmentRepo() *DepartmentRepo { return &DepartmentRepo{db: r.DB} }
+func (r *Repositories) DoctorRepo() *DoctorRepo         { return &DoctorRepo{db: r.DB} }
+func (r *Repositories) ScheduleTemplateRepo() *ScheduleTemplateRepo {
+	return &ScheduleTemplateRepo{db: r.DB}
+}
 
 func (r *DeviceRepo) Create(ctx context.Context, d resource.DeviceResp) error {
+	examTypesJSON, _ := json.Marshal(d.SupportedExamTypes)
 	return r.db.WithContext(ctx).Create(&po.DevicePO{
-		ID:           d.ID,
-		Name:         d.Name,
-		CampusID:     d.CampusID,
-		DepartmentID: d.DepartmentID,
-		Status:       d.Status,
-		CreatedAt:    d.CreatedAt,
+		ID:                 d.ID,
+		Name:               d.Name,
+		CampusID:           d.CampusID,
+		DepartmentID:       d.DepartmentID,
+		Model:              d.Model,
+		Manufacturer:       d.Manufacturer,
+		SupportedExamTypes: string(examTypesJSON),
+		MaxDailySlots:      d.MaxDailySlots,
+		Status:             d.Status,
+		CreatedAt:          d.CreatedAt,
 	}).Error
 }
 func (r *DeviceRepo) Get(ctx context.Context, id string) (*resource.DeviceResp, error) {
@@ -52,13 +64,19 @@ func (r *DeviceRepo) Get(ctx context.Context, id string) (*resource.DeviceResp, 
 	if err := r.db.WithContext(ctx).First(&p, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
+	var examTypes []string
+	_ = json.Unmarshal([]byte(p.SupportedExamTypes), &examTypes)
 	return &resource.DeviceResp{
-		ID:           p.ID,
-		Name:         p.Name,
-		CampusID:     p.CampusID,
-		DepartmentID: p.DepartmentID,
-		Status:       p.Status,
-		CreatedAt:    p.CreatedAt,
+		ID:                 p.ID,
+		Name:               p.Name,
+		CampusID:           p.CampusID,
+		DepartmentID:       p.DepartmentID,
+		Model:              p.Model,
+		Manufacturer:       p.Manufacturer,
+		SupportedExamTypes: examTypes,
+		MaxDailySlots:      p.MaxDailySlots,
+		Status:             p.Status,
+		CreatedAt:          p.CreatedAt,
 	}, nil
 }
 func (r *DeviceRepo) List(ctx context.Context) ([]resource.DeviceResp, error) {
@@ -68,24 +86,35 @@ func (r *DeviceRepo) List(ctx context.Context) ([]resource.DeviceResp, error) {
 	}
 	out := make([]resource.DeviceResp, 0, len(ps))
 	for _, p := range ps {
+		var examTypes []string
+		_ = json.Unmarshal([]byte(p.SupportedExamTypes), &examTypes)
 		out = append(out, resource.DeviceResp{
-			ID:           p.ID,
-			Name:         p.Name,
-			CampusID:     p.CampusID,
-			DepartmentID: p.DepartmentID,
-			Status:       p.Status,
-			CreatedAt:    p.CreatedAt,
+			ID:                 p.ID,
+			Name:               p.Name,
+			CampusID:           p.CampusID,
+			DepartmentID:       p.DepartmentID,
+			Model:              p.Model,
+			Manufacturer:       p.Manufacturer,
+			SupportedExamTypes: examTypes,
+			MaxDailySlots:      p.MaxDailySlots,
+			Status:             p.Status,
+			CreatedAt:          p.CreatedAt,
 		})
 	}
 	return out, nil
 }
 
 func (r *DeviceRepo) Update(ctx context.Context, id string, d resource.DeviceResp) error {
+	examTypesJSON, _ := json.Marshal(d.SupportedExamTypes)
 	return r.db.WithContext(ctx).Model(&po.DevicePO{}).Where("id = ?", id).Updates(map[string]interface{}{
-		"name":          d.Name,
-		"campus_id":     d.CampusID,
-		"department_id": d.DepartmentID,
-		"status":        d.Status,
+		"name":                 d.Name,
+		"campus_id":            d.CampusID,
+		"department_id":        d.DepartmentID,
+		"model":                d.Model,
+		"manufacturer":         d.Manufacturer,
+		"supported_exam_types": string(examTypesJSON),
+		"max_daily_slots":      d.MaxDailySlots,
+		"status":               d.Status,
 	}).Error
 }
 
@@ -199,10 +228,13 @@ func (r *AliasRepo) List(ctx context.Context, examItemID string) ([]resource.Ali
 
 func (r *SlotPoolRepo) Create(ctx context.Context, p resource.SlotPoolResp) error {
 	return r.db.WithContext(ctx).Create(&po.SlotPoolPO{
-		ID:     p.ID,
-		Name:   p.Name,
-		Type:   p.Type,
-		Status: p.Status,
+		ID:                 p.ID,
+		Name:               p.Name,
+		Type:               p.Type,
+		Status:             p.Status,
+		AllocationRatio:    p.AllocationRatio,
+		OverflowEnabled:    p.OverflowEnabled,
+		OverflowTargetPool: p.OverflowTargetPool,
 	}).Error
 }
 func (r *SlotPoolRepo) List(ctx context.Context) ([]resource.SlotPoolResp, error) {
@@ -213,10 +245,13 @@ func (r *SlotPoolRepo) List(ctx context.Context) ([]resource.SlotPoolResp, error
 	out := make([]resource.SlotPoolResp, 0, len(ps))
 	for _, p := range ps {
 		out = append(out, resource.SlotPoolResp{
-			ID:     p.ID,
-			Name:   p.Name,
-			Type:   p.Type,
-			Status: p.Status,
+			ID:                 p.ID,
+			Name:               p.Name,
+			Type:               p.Type,
+			Status:             p.Status,
+			AllocationRatio:    p.AllocationRatio,
+			OverflowEnabled:    p.OverflowEnabled,
+			OverflowTargetPool: p.OverflowTargetPool,
 		})
 	}
 	return out, nil
@@ -511,4 +546,128 @@ func (r *DepartmentRepo) List(ctx context.Context, campusID string) ([]resource.
 		})
 	}
 	return out, nil
+}
+
+// === DoctorRepo ===
+
+func (r *DoctorRepo) Create(ctx context.Context, d resource.DoctorResp) error {
+	return r.db.WithContext(ctx).Create(&po.DoctorPO{
+		ID:           d.ID,
+		DepartmentID: d.DepartmentID,
+		HISCode:      d.HISCode,
+		Name:         d.Name,
+		Title:        d.Title,
+		Gender:       d.Gender,
+		Status:       d.Status,
+	}).Error
+}
+
+func (r *DoctorRepo) Get(ctx context.Context, id string) (*resource.DoctorResp, error) {
+	var p po.DoctorPO
+	if err := r.db.WithContext(ctx).First(&p, "id = ?", id).Error; err != nil {
+		return nil, err
+	}
+	return &resource.DoctorResp{
+		ID:           p.ID,
+		DepartmentID: p.DepartmentID,
+		HISCode:      p.HISCode,
+		Name:         p.Name,
+		Title:        p.Title,
+		Gender:       p.Gender,
+		Status:       p.Status,
+	}, nil
+}
+
+func (r *DoctorRepo) List(ctx context.Context, deptID string) ([]resource.DoctorResp, error) {
+	var ps []po.DoctorPO
+	q := r.db.WithContext(ctx).Where("status = ?", "active")
+	if deptID != "" {
+		q = q.Where("department_id = ?", deptID)
+	}
+	if err := q.Order("name ASC").Find(&ps).Error; err != nil {
+		return nil, err
+	}
+	out := make([]resource.DoctorResp, 0, len(ps))
+	for _, p := range ps {
+		out = append(out, resource.DoctorResp{
+			ID:           p.ID,
+			DepartmentID: p.DepartmentID,
+			HISCode:      p.HISCode,
+			Name:         p.Name,
+			Title:        p.Title,
+			Gender:       p.Gender,
+			Status:       p.Status,
+		})
+	}
+	return out, nil
+}
+
+func (r *DoctorRepo) Update(ctx context.Context, id string, d resource.DoctorResp) error {
+	return r.db.WithContext(ctx).Model(&po.DoctorPO{}).Where("id = ?", id).Updates(map[string]interface{}{
+		"his_code": d.HISCode,
+		"name":     d.Name,
+		"title":    d.Title,
+		"gender":   d.Gender,
+		"status":   d.Status,
+	}).Error
+}
+
+// === ScheduleTemplateRepo ===
+
+func (r *ScheduleTemplateRepo) Create(ctx context.Context, t resource.ScheduleTemplateResp) error {
+	patternJSON, _ := json.Marshal(t.SlotPattern)
+	return r.db.WithContext(ctx).Create(&po.ScheduleTemplatePO{
+		ID:           t.ID,
+		Name:         t.Name,
+		RepeatType:   t.RepeatType,
+		SlotPattern:  string(patternJSON),
+		SkipWeekends: t.SkipWeekends,
+	}).Error
+}
+
+func (r *ScheduleTemplateRepo) Get(ctx context.Context, id string) (*resource.ScheduleTemplateResp, error) {
+	var p po.ScheduleTemplatePO
+	if err := r.db.WithContext(ctx).First(&p, "id = ?", id).Error; err != nil {
+		return nil, err
+	}
+	var pattern resource.SlotPatternReq
+	_ = json.Unmarshal([]byte(p.SlotPattern), &pattern)
+	return &resource.ScheduleTemplateResp{
+		ID:           p.ID,
+		Name:         p.Name,
+		RepeatType:   p.RepeatType,
+		SlotPattern:  pattern,
+		SkipWeekends: p.SkipWeekends,
+	}, nil
+}
+
+func (r *ScheduleTemplateRepo) List(ctx context.Context) ([]resource.ScheduleTemplateResp, error) {
+	var ps []po.ScheduleTemplatePO
+	if err := r.db.WithContext(ctx).Order("name ASC").Find(&ps).Error; err != nil {
+		return nil, err
+	}
+	out := make([]resource.ScheduleTemplateResp, 0, len(ps))
+	for _, p := range ps {
+		var pattern resource.SlotPatternReq
+		_ = json.Unmarshal([]byte(p.SlotPattern), &pattern)
+		out = append(out, resource.ScheduleTemplateResp{
+			ID:           p.ID,
+			Name:         p.Name,
+			RepeatType:   p.RepeatType,
+			SlotPattern:  pattern,
+			SkipWeekends: p.SkipWeekends,
+		})
+	}
+	return out, nil
+}
+
+func (r *ScheduleTemplateRepo) Delete(ctx context.Context, id string) error {
+	res := r.db.WithContext(ctx).Delete(&po.ScheduleTemplatePO{}, "id = ?", id)
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return bizErr.New(bizErr.ErrNotFound)
+	}
+	return nil
 }

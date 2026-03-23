@@ -41,6 +41,18 @@ type (
 		Create(ctx context.Context, p SlotPoolResp) error
 		List(ctx context.Context) ([]SlotPoolResp, error)
 	}
+	DoctorRepository interface {
+		Create(ctx context.Context, d DoctorResp) error
+		Get(ctx context.Context, id string) (*DoctorResp, error)
+		List(ctx context.Context, deptID string) ([]DoctorResp, error)
+		Update(ctx context.Context, id string, d DoctorResp) error
+	}
+	ScheduleTemplateRepository interface {
+		Create(ctx context.Context, t ScheduleTemplateResp) error
+		Get(ctx context.Context, id string) (*ScheduleTemplateResp, error)
+		List(ctx context.Context) ([]ScheduleTemplateResp, error)
+		Delete(ctx context.Context, id string) error
+	}
 	ScheduleRepository interface {
 		Create(ctx context.Context, deviceID string, date time.Time, startTime, endTime string) (string, error)
 		Suspend(ctx context.Context, deviceID string, date time.Time, reason string) error
@@ -68,6 +80,8 @@ type Service struct {
 	slotPoolRepo SlotPoolRepository
 	scheduleRepo ScheduleRepository
 	timeSlotRepo TimeSlotRepository
+	doctorRepo   DoctorRepository
+	templateRepo ScheduleTemplateRepository
 }
 
 func NewService(
@@ -79,6 +93,8 @@ func NewService(
 	slotPoolRepo SlotPoolRepository,
 	scheduleRepo ScheduleRepository,
 	timeSlotRepo TimeSlotRepository,
+	doctorRepo DoctorRepository,
+	templateRepo ScheduleTemplateRepository,
 ) *Service {
 	return &Service{
 		campusRepo:   campusRepo,
@@ -89,18 +105,28 @@ func NewService(
 		slotPoolRepo: slotPoolRepo,
 		scheduleRepo: scheduleRepo,
 		timeSlotRepo: timeSlotRepo,
+		doctorRepo:   doctorRepo,
+		templateRepo: templateRepo,
 	}
 }
 
 func (s *Service) CreateDevice(ctx context.Context, req CreateDeviceReq) (*DeviceResp, error) {
 	now := time.Now()
+	maxSlots := req.MaxDailySlots
+	if maxSlots <= 0 {
+		maxSlots = 50
+	}
 	d := DeviceResp{
-		ID:           uuid.New().String(),
-		Name:         req.Name,
-		CampusID:     req.CampusID,
-		DepartmentID: req.DepartmentID,
-		Status:       "active",
-		CreatedAt:    now,
+		ID:                 uuid.New().String(),
+		Name:               req.Name,
+		CampusID:           req.CampusID,
+		DepartmentID:       req.DepartmentID,
+		Model:              req.Model,
+		Manufacturer:       req.Manufacturer,
+		SupportedExamTypes: req.SupportedExamTypes,
+		MaxDailySlots:      maxSlots,
+		Status:             "active",
+		CreatedAt:          now,
 	}
 	if err := s.deviceRepo.Create(ctx, d); err != nil {
 		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
@@ -146,6 +172,18 @@ func (s *Service) UpdateDevice(ctx context.Context, id string, req UpdateDeviceR
 	}
 	if req.DepartmentID != "" {
 		existing.DepartmentID = req.DepartmentID
+	}
+	if req.Model != "" {
+		existing.Model = req.Model
+	}
+	if req.Manufacturer != "" {
+		existing.Manufacturer = req.Manufacturer
+	}
+	if len(req.SupportedExamTypes) > 0 {
+		existing.SupportedExamTypes = req.SupportedExamTypes
+	}
+	if req.MaxDailySlots > 0 {
+		existing.MaxDailySlots = req.MaxDailySlots
 	}
 	if req.Status != "" {
 		existing.Status = req.Status
@@ -233,10 +271,13 @@ func (s *Service) ListAliases(ctx context.Context, examItemID string) ([]AliasRe
 
 func (s *Service) CreateSlotPool(ctx context.Context, req CreateSlotPoolReq) (*SlotPoolResp, error) {
 	p := SlotPoolResp{
-		ID:     uuid.New().String(),
-		Name:   req.Name,
-		Type:   req.Type,
-		Status: "active",
+		ID:                 uuid.New().String(),
+		Name:               req.Name,
+		Type:               req.Type,
+		Status:             "active",
+		AllocationRatio:    req.AllocationRatio,
+		OverflowEnabled:    req.OverflowEnabled,
+		OverflowTargetPool: req.OverflowTargetPool,
 	}
 	if err := s.slotPoolRepo.Create(ctx, p); err != nil {
 		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
@@ -253,6 +294,36 @@ func (s *Service) ListSlotPools(ctx context.Context) ([]SlotPoolResp, error) {
 }
 
 func (s *Service) GenerateSchedule(ctx context.Context, req GenerateScheduleReq) ([]TimeSlotResp, error) {
+	// 若指定模板ID，从模板加载排班参数
+	if req.TemplateID != "" && s.templateRepo != nil {
+		tmpl, err := s.templateRepo.Get(ctx, req.TemplateID)
+		if err != nil {
+			return nil, bizErr.Wrap(bizErr.ErrInternal, err)
+		}
+		if tmpl == nil {
+			return nil, bizErr.New(bizErr.ErrNotFound)
+		}
+		// 模板参数覆盖（调用方仍可通过请求字段覆盖模板值）
+		if req.StartTime == "" {
+			req.StartTime = tmpl.SlotPattern.StartTime
+		}
+		if req.EndTime == "" {
+			req.EndTime = tmpl.SlotPattern.EndTime
+		}
+		if req.SlotMinutes == 0 {
+			req.SlotMinutes = tmpl.SlotPattern.SlotMinutes
+		}
+		if req.ExamItemID == "" {
+			req.ExamItemID = tmpl.SlotPattern.ExamItemID
+		}
+		if req.PoolType == "" {
+			req.PoolType = tmpl.SlotPattern.PoolType
+		}
+		if !req.SkipWeekends {
+			req.SkipWeekends = tmpl.SkipWeekends
+		}
+	}
+
 	// 支持单日(date) 或批量(start_date~end_date)
 	var dates []time.Time
 	if req.Date != "" {
@@ -551,4 +622,94 @@ func (s *Service) ListSchedules(ctx context.Context, req ListSchedulesReq) ([]Sc
 		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
 	}
 	return list, nil
+}
+
+// === 医生管理 ===
+
+func (s *Service) CreateDoctor(ctx context.Context, req CreateDoctorReq) (*DoctorResp, error) {
+	gender := req.Gender
+	if gender == "" {
+		gender = "unknown"
+	}
+	d := DoctorResp{
+		ID:           uuid.New().String(),
+		DepartmentID: req.DepartmentID,
+		HISCode:      req.HISCode,
+		Name:         req.Name,
+		Title:        req.Title,
+		Gender:       gender,
+		Status:       "active",
+	}
+	if err := s.doctorRepo.Create(ctx, d); err != nil {
+		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	return &d, nil
+}
+
+func (s *Service) ListDoctors(ctx context.Context, deptID string) ([]DoctorResp, error) {
+	list, err := s.doctorRepo.List(ctx, deptID)
+	if err != nil {
+		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	return list, nil
+}
+
+func (s *Service) UpdateDoctor(ctx context.Context, id string, req UpdateDoctorReq) (*DoctorResp, error) {
+	existing, err := s.doctorRepo.Get(ctx, id)
+	if err != nil {
+		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	if existing == nil {
+		return nil, bizErr.New(bizErr.ErrNotFound)
+	}
+	if req.Name != "" {
+		existing.Name = req.Name
+	}
+	if req.HISCode != "" {
+		existing.HISCode = req.HISCode
+	}
+	if req.Title != "" {
+		existing.Title = req.Title
+	}
+	if req.Gender != "" {
+		existing.Gender = req.Gender
+	}
+	if req.Status != "" {
+		existing.Status = req.Status
+	}
+	if err := s.doctorRepo.Update(ctx, id, *existing); err != nil {
+		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	return existing, nil
+}
+
+// === 排班模板管理 ===
+
+func (s *Service) CreateScheduleTemplate(ctx context.Context, req CreateScheduleTemplateReq) (*ScheduleTemplateResp, error) {
+	t := ScheduleTemplateResp{
+		ID:           uuid.New().String(),
+		Name:         req.Name,
+		RepeatType:   req.RepeatType,
+		SlotPattern:  req.SlotPattern,
+		SkipWeekends: req.SkipWeekends,
+	}
+	if err := s.templateRepo.Create(ctx, t); err != nil {
+		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	return &t, nil
+}
+
+func (s *Service) ListScheduleTemplates(ctx context.Context) ([]ScheduleTemplateResp, error) {
+	list, err := s.templateRepo.List(ctx)
+	if err != nil {
+		return nil, bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	return list, nil
+}
+
+func (s *Service) DeleteScheduleTemplate(ctx context.Context, id string) error {
+	if err := s.templateRepo.Delete(ctx, id); err != nil {
+		return bizErr.Wrap(bizErr.ErrInternal, err)
+	}
+	return nil
 }

@@ -151,6 +151,64 @@ func (m *mockSlotPoolRepo) Create(_ context.Context, p SlotPoolResp) error {
 }
 func (m *mockSlotPoolRepo) List(_ context.Context) ([]SlotPoolResp, error) { return m.items, nil }
 
+type mockDoctorRepo struct {
+	items map[string]DoctorResp
+}
+
+func newMockDoctorRepo() *mockDoctorRepo { return &mockDoctorRepo{items: map[string]DoctorResp{}} }
+func (m *mockDoctorRepo) Create(_ context.Context, d DoctorResp) error {
+	m.items[d.ID] = d
+	return nil
+}
+func (m *mockDoctorRepo) Get(_ context.Context, id string) (*DoctorResp, error) {
+	v, ok := m.items[id]
+	if !ok {
+		return nil, nil
+	}
+	return &v, nil
+}
+func (m *mockDoctorRepo) List(_ context.Context, _ string) ([]DoctorResp, error) {
+	out := make([]DoctorResp, 0, len(m.items))
+	for _, v := range m.items {
+		out = append(out, v)
+	}
+	return out, nil
+}
+func (m *mockDoctorRepo) Update(_ context.Context, id string, d DoctorResp) error {
+	m.items[id] = d
+	return nil
+}
+
+type mockScheduleTemplateRepo struct {
+	items map[string]ScheduleTemplateResp
+}
+
+func newMockScheduleTemplateRepo() *mockScheduleTemplateRepo {
+	return &mockScheduleTemplateRepo{items: map[string]ScheduleTemplateResp{}}
+}
+func (m *mockScheduleTemplateRepo) Create(_ context.Context, t ScheduleTemplateResp) error {
+	m.items[t.ID] = t
+	return nil
+}
+func (m *mockScheduleTemplateRepo) Get(_ context.Context, id string) (*ScheduleTemplateResp, error) {
+	v, ok := m.items[id]
+	if !ok {
+		return nil, nil
+	}
+	return &v, nil
+}
+func (m *mockScheduleTemplateRepo) List(_ context.Context) ([]ScheduleTemplateResp, error) {
+	out := make([]ScheduleTemplateResp, 0, len(m.items))
+	for _, v := range m.items {
+		out = append(out, v)
+	}
+	return out, nil
+}
+func (m *mockScheduleTemplateRepo) Delete(_ context.Context, id string) error {
+	delete(m.items, id)
+	return nil
+}
+
 type mockScheduleRepo struct {
 	schedules []string // IDs
 }
@@ -237,6 +295,8 @@ func newTestResourceService() *Service {
 		&mockSlotPoolRepo{},
 		&mockScheduleRepo{},
 		newMockTimeSlotRepo(),
+		newMockDoctorRepo(),
+		newMockScheduleTemplateRepo(),
 	)
 }
 

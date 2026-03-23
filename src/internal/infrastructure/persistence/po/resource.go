@@ -30,13 +30,17 @@ type DepartmentPO struct {
 func (DepartmentPO) TableName() string { return "departments" }
 
 type DevicePO struct {
-	ID           string    `gorm:"column:id;primaryKey;size:36"`
-	Name         string    `gorm:"column:name;not null;size:100;index"`
-	CampusID     string    `gorm:"column:campus_id;size:36;index"`
-	DepartmentID string    `gorm:"column:department_id;size:36;index"`
-	Status       string    `gorm:"column:status;not null;size:10;default:active;index"`
-	CreatedAt    time.Time `gorm:"column:created_at;autoCreateTime"`
-	UpdatedAt    time.Time `gorm:"column:updated_at;autoUpdateTime"`
+	ID                 string    `gorm:"column:id;primaryKey;size:36"`
+	Name               string    `gorm:"column:name;not null;size:100;index"`
+	Model              string    `gorm:"column:model;size:50"`
+	Manufacturer       string    `gorm:"column:manufacturer;size:50"`
+	SupportedExamTypes string    `gorm:"column:supported_exam_types;type:json;default:'[]'"` // JSON array
+	MaxDailySlots      int       `gorm:"column:max_daily_slots;not null;default:50"`
+	CampusID           string    `gorm:"column:campus_id;size:36;index"`
+	DepartmentID       string    `gorm:"column:department_id;size:36;index"`
+	Status             string    `gorm:"column:status;not null;size:10;default:active;index"`
+	CreatedAt          time.Time `gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt          time.Time `gorm:"column:updated_at;autoUpdateTime"`
 }
 
 func (DevicePO) TableName() string { return "devices" }
@@ -63,15 +67,45 @@ type ItemAliasPO struct {
 func (ItemAliasPO) TableName() string { return "item_aliases" }
 
 type SlotPoolPO struct {
-	ID        string    `gorm:"column:id;primaryKey;size:36"`
-	Name      string    `gorm:"column:name;not null;size:60;uniqueIndex"`
-	Type      string    `gorm:"column:type;not null;size:20"` // public/department/doctor
-	Status    string    `gorm:"column:status;not null;size:10;default:active;index"`
-	CreatedAt time.Time `gorm:"column:created_at;autoCreateTime"`
-	UpdatedAt time.Time `gorm:"column:updated_at;autoUpdateTime"`
+	ID                 string    `gorm:"column:id;primaryKey;size:36"`
+	Name               string    `gorm:"column:name;not null;size:60;uniqueIndex"`
+	Type               string    `gorm:"column:type;not null;size:20"` // public/department/doctor
+	Status             string    `gorm:"column:status;not null;size:10;default:active;index"`
+	AllocationRatio    float64   `gorm:"column:allocation_ratio;not null;default:0"`
+	OverflowEnabled    bool      `gorm:"column:overflow_enabled;not null;default:false"`
+	OverflowTargetPool string    `gorm:"column:overflow_target_pool;size:36"`
+	CreatedAt          time.Time `gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt          time.Time `gorm:"column:updated_at;autoUpdateTime"`
 }
 
 func (SlotPoolPO) TableName() string { return "slot_pools" }
+
+type DoctorPO struct {
+	ID           string     `gorm:"column:id;primaryKey;size:36"`
+	DepartmentID string     `gorm:"column:department_id;not null;size:36;index"`
+	HISCode      string     `gorm:"column:his_code;size:30"`
+	Name         string     `gorm:"column:name;not null;size:30"`
+	Title        string     `gorm:"column:title;size:20"`
+	Gender       string     `gorm:"column:gender;not null;size:10;default:unknown"`
+	Status       string     `gorm:"column:status;not null;size:10;default:active;index"`
+	SyncedAt     *time.Time `gorm:"column:synced_at"`
+	CreatedAt    time.Time  `gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt    time.Time  `gorm:"column:updated_at;autoUpdateTime"`
+}
+
+func (DoctorPO) TableName() string { return "doctors" }
+
+type ScheduleTemplatePO struct {
+	ID           string    `gorm:"column:id;primaryKey;size:36"`
+	Name         string    `gorm:"column:name;not null;size:50;uniqueIndex"`
+	RepeatType   string    `gorm:"column:repeat_type;not null;size:20"`    // once/daily/weekly
+	SlotPattern  string    `gorm:"column:slot_pattern;not null;type:json"` // JSON
+	SkipWeekends bool      `gorm:"column:skip_weekends;not null;default:false"`
+	CreatedAt    time.Time `gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt    time.Time `gorm:"column:updated_at;autoUpdateTime"`
+}
+
+func (ScheduleTemplatePO) TableName() string { return "schedule_templates" }
 
 type SchedulePO struct {
 	ID            string    `gorm:"column:id;primaryKey;size:36"`

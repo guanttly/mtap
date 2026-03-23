@@ -74,6 +74,8 @@ func main() {
 		&po.SlotPoolPO{},
 		&po.SchedulePO{},
 		&po.TimeSlotPO{},
+		&po.DoctorPO{},
+		&po.ScheduleTemplatePO{},
 
 		&po.AppointmentPO{},
 		&po.AppointmentItemPO{},
@@ -154,6 +156,8 @@ func main() {
 		resRepos.SlotPoolRepo(),
 		resRepos.ScheduleRepo(),
 		resRepos.TimeSlotRepo(),
+		resRepos.DoctorRepo(),
+		resRepos.ScheduleTemplateRepo(),
 	)
 	resHandler := httpRes.NewHandler(resSvc)
 

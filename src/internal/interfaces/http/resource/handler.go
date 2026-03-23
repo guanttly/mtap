@@ -57,6 +57,16 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		operatorPlus.GET("/slots/available", h.QueryAvailableSlots)
 		operatorPlus.POST("/slots/:id/lock", h.LockSlot)
 		operatorPlus.POST("/slots/:id/release", h.ReleaseSlot)
+
+		// 医生管理
+		adminOnly.POST("/doctors", h.CreateDoctor)
+		adminOnly.PUT("/doctors/:id", h.UpdateDoctor)
+		operatorPlus.GET("/doctors", h.ListDoctors)
+
+		// 排班模板
+		adminOnly.POST("/schedule-templates", h.CreateScheduleTemplate)
+		adminOnly.DELETE("/schedule-templates/:id", h.DeleteScheduleTemplate)
+		operatorPlus.GET("/schedule-templates", h.ListScheduleTemplates)
 	}
 }
 
@@ -384,4 +394,75 @@ func (h *Handler) ListSchedules(c *gin.Context) {
 		return
 	}
 	response.OKWithData(c, list)
+}
+
+func (h *Handler) CreateDoctor(c *gin.Context) {
+	var req appRes.CreateDoctorReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Fail(c, http.StatusBadRequest, 1004, err.Error())
+		return
+	}
+	resp, err := h.svc.CreateDoctor(c.Request.Context(), req)
+	if err != nil {
+		response.FailWithError(c, err)
+		return
+	}
+	response.Created(c, resp)
+}
+
+func (h *Handler) ListDoctors(c *gin.Context) {
+	deptID := c.Query("department_id")
+	list, err := h.svc.ListDoctors(c.Request.Context(), deptID)
+	if err != nil {
+		response.FailWithError(c, err)
+		return
+	}
+	response.OKWithData(c, list)
+}
+
+func (h *Handler) UpdateDoctor(c *gin.Context) {
+	id := c.Param("id")
+	var req appRes.UpdateDoctorReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Fail(c, http.StatusBadRequest, 1004, err.Error())
+		return
+	}
+	resp, err := h.svc.UpdateDoctor(c.Request.Context(), id, req)
+	if err != nil {
+		response.FailWithError(c, err)
+		return
+	}
+	response.OKWithData(c, resp)
+}
+
+func (h *Handler) CreateScheduleTemplate(c *gin.Context) {
+	var req appRes.CreateScheduleTemplateReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Fail(c, http.StatusBadRequest, 1004, err.Error())
+		return
+	}
+	resp, err := h.svc.CreateScheduleTemplate(c.Request.Context(), req)
+	if err != nil {
+		response.FailWithError(c, err)
+		return
+	}
+	response.Created(c, resp)
+}
+
+func (h *Handler) ListScheduleTemplates(c *gin.Context) {
+	list, err := h.svc.ListScheduleTemplates(c.Request.Context())
+	if err != nil {
+		response.FailWithError(c, err)
+		return
+	}
+	response.OKWithData(c, list)
+}
+
+func (h *Handler) DeleteScheduleTemplate(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.svc.DeleteScheduleTemplate(c.Request.Context(), id); err != nil {
+		response.FailWithError(c, err)
+		return
+	}
+	response.OK(c)
 }

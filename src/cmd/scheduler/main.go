@@ -57,6 +57,7 @@ func main() {
 	anomalyJob := job.NewAnomalyDetectionJob(anomalySvc)
 	decayJob := job.NewStrategyDecayJob(decaySvc)
 	trialMonitorJob := job.NewTrialMonitorJob(evalSvc, optRepos.StrategyRepo())
+	paymentReleaseJob := job.NewPaymentTimeoutReleaseJob(db)
 
 	// 注册定时任务（使用 cron with seconds 支持精确到秒的表达式）
 	c := cron.New(cron.WithSeconds())
@@ -65,10 +66,12 @@ func main() {
 	c.AddFunc("0 */5 * * * *", slotReleaseJob.Run)
 	// 黑名单清理：每日凌晨01:00
 	c.AddFunc("0 0 1 * * *", blacklistJob.Run)
-	// 异常检测：每小时整点
-	c.AddFunc("0 0 * * * *", anomalyJob.Run)
-	// 试运行监控：每小时05分
-	c.AddFunc("0 5 * * * *", trialMonitorJob.Run)
+	// 未缴费预约自动取消：每小时整点
+	c.AddFunc("0 0 * * * *", paymentReleaseJob.Run)
+	// 异常检测：每小时05分
+	c.AddFunc("0 5 * * * *", anomalyJob.Run)
+	// 试运行监控：每小时10分
+	c.AddFunc("0 10 * * * *", trialMonitorJob.Run)
 	// 策略衰减检测：每日凌晨03:00
 	c.AddFunc("0 0 3 * * *", decayJob.Run)
 	// 周度效能扫描：每周一凌晨04:00
