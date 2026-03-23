@@ -102,15 +102,14 @@ function handleDelete(record: RoleInfo) {
 </script>
 
 <template>
-  <div>
-    <div class="mb-4 flex items-center gap-2">
-      <a-button type="primary" @click="openCreate">
-        新增角色
-      </a-button>
-      <a-button @click="fetchData">
-        刷新
-      </a-button>
-    </div>
+  <a-card class="list-card" :bordered="false">
+    <template #title>角色管理</template>
+    <template #extra>
+      <a-space>
+        <a-button @click="fetchData">刷新</a-button>
+        <a-button type="primary" @click="openCreate">新增角色</a-button>
+      </a-space>
+    </template>
 
     <a-table
       :columns="columns"
@@ -180,5 +179,5 @@ function handleDelete(record: RoleInfo) {
         </template>
       </a-form>
     </a-modal>
-  </div>
+  </a-card>
 </template>

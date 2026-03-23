@@ -4,6 +4,7 @@
 import { ref } from 'vue'
 import { message } from 'ant-design-vue'
 import { triageApi } from '@/api/triage'
+import SvgIcon from '@/components/common/SvgIcon.vue'
 import type { CheckInResult } from '@/types/triage'
 
 const qrCode = ref('')
@@ -51,7 +52,7 @@ async function nurseCheckIn() {
       <a-tab-pane key="kiosk" tab="自助签到">
         <a-card size="small">
           <div style="text-align: center; padding: 24px 0;">
-            <div style="font-size: 48px; margin-bottom: 24px;">📱</div>
+            <SvgIcon name="mobile-outlined" :size="72" color="#1677ff" style="margin-bottom: 24px;" />
             <p style="color: #8c8c8c; margin-bottom: 24px;">请扫描预约二维码或输入二维码内容</p>
             <a-input-search
               v-model:value="qrCode"

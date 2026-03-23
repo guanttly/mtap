@@ -83,15 +83,14 @@ function handleDelete(record: Device) {
 </script>
 
 <template>
-  <div>
-    <div class="mb-4 flex items-center gap-2">
-      <a-button type="primary" @click="openCreate">
-        新增设备
-      </a-button>
-      <a-button @click="fetchData">
-        刷新
-      </a-button>
-    </div>
+  <a-card class="list-card" :bordered="false">
+    <template #title>设备管理</template>
+    <template #extra>
+      <a-space>
+        <a-button @click="fetchData">刷新</a-button>
+        <a-button type="primary" @click="openCreate">新增设备</a-button>
+      </a-space>
+    </template>
 
     <a-table
       :columns="columns"
@@ -108,7 +107,7 @@ function handleDelete(record: Device) {
             <a-tag v-for="t in (record as Device).supported_exam_types" :key="t" color="blue">
               {{ t }}
             </a-tag>
-            <span v-if="!(record as Device).supported_exam_types?.length" style="color: #bfbfbf;">—</span>
+            <span v-if="!(record as Device).supported_exam_types?.length" class="text-muted">—</span>
           </a-space>
         </template>
         <template v-else-if="column.key === 'status'">
@@ -154,5 +153,5 @@ function handleDelete(record: Device) {
         </a-form-item>
       </a-form>
     </a-modal>
-  </div>
+  </a-card>
 </template>

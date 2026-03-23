@@ -152,15 +152,14 @@ function handleToggleStatus(record: PatientAdaptRule) {
 </script>
 
 <template>
-  <div>
-    <div class="action-bar mb-4 flex items-center gap-2">
-      <a-button type="primary" @click="openCreateOrEdit()">
-        新增适配规则
-      </a-button>
-      <a-button @click="fetchData">
-        刷新
-      </a-button>
-    </div>
+  <a-card class="list-card" :bordered="false">
+    <template #title>患者适配规则</template>
+    <template #extra>
+      <a-space>
+        <a-button @click="fetchData">刷新</a-button>
+        <a-button type="primary" @click="openCreateOrEdit()">新增适配规则</a-button>
+      </a-space>
+    </template>
 
     <a-table
       :columns="columns"
@@ -250,5 +249,5 @@ function handleToggleStatus(record: PatientAdaptRule) {
         </a-form-item>
       </a-form>
     </a-modal>
-  </div>
+  </a-card>
 </template>

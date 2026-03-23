@@ -27,7 +27,7 @@ onErrorCaptured((err: unknown) => {
     <Sidebar />
     <a-layout style="overflow: hidden">
       <AppHeader :title="pageTitle" />
-      <a-layout-content style="margin: 0; overflow-y: auto; min-height: 0">
+      <a-layout-content style="margin: 0; overflow-y: auto; min-height: 0; background: #f0f2f5;">
         <div class="page-container">
           <router-view :key="routerKey" />
         </div>

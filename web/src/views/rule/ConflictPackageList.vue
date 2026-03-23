@@ -97,17 +97,15 @@ function handleDelete(record: ConflictPackage) {
   })
 }
 </script>
-
 <template>
-  <div>
-    <div class="mb-4 flex items-center gap-2">
-      <a-button type="primary" @click="openCreate">
-        新增冲突包
-      </a-button>
-      <a-button @click="fetchData">
-        刷新
-      </a-button>
-    </div>
+  <a-card class="list-card" :bordered="false">
+    <template #title>冲突包</template>
+    <template #extra>
+      <a-space>
+        <a-button @click="fetchData">刷新</a-button>
+        <a-button type="primary" @click="openCreate">新增冲突包</a-button>
+      </a-space>
+    </template>
     <a-table :columns="columns" :data-source="items" :loading="loading" :pagination="pagination" row-key="id" size="middle" @change="onTableChange">
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'actions'">
@@ -151,5 +149,5 @@ function handleDelete(record: ConflictPackage) {
         </a-form-item>
       </a-form>
     </a-modal>
-  </div>
+  </a-card>
 </template>

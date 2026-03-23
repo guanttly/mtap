@@ -43,29 +43,58 @@ async function handleCancel(record: Appointment) {
 </script>
 
 <template>
-  <div>
-    <div class="search-bar" style="display: flex; gap: 8px; align-items: center; margin-bottom: 16px;">
-      <a-input-search v-model:value="searchKeyword" placeholder="患者姓名/就诊号" style="width: 300px;" @search="handleSearch" />
-      <a-select style="width: 140px;" placeholder="状态筛选" allow-clear @change="(v: string) => search({ status: v })">
-        <a-select-option v-for="(label, val) in STATUS_LABEL" :key="val" :value="val">{{ label }}</a-select-option>
+  <a-card class="list-card" :bordered="false">
+    <template #title>预约列表</template>
+
+    <!-- 搜索工具栏 -->
+    <div class="list-toolbar">
+      <a-input-search
+        v-model:value="searchKeyword"
+        placeholder="患者姓名 / 就诊号"
+        style="width: 260px;"
+        allow-clear
+        @search="handleSearch"
+      />
+      <a-select
+        style="width: 140px;"
+        placeholder="状态筛选"
+        allow-clear
+        @change="(v: string) => search({ status: v })"
+      >
+        <a-select-option v-for="(label, val) in STATUS_LABEL" :key="val" :value="val">
+          {{ label }}
+        </a-select-option>
       </a-select>
     </div>
-    <a-table :columns="columns" :data-source="items" :loading="loading" :pagination="pagination" row-key="id" size="middle" @change="onTableChange">
+
+    <a-table
+      :columns="columns"
+      :data-source="items"
+      :loading="loading"
+      :pagination="pagination"
+      row-key="id"
+      size="middle"
+      @change="onTableChange"
+    >
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'status'">
-          <a-tag :color="STATUS_COLOR[(record as Appointment).status]">{{ STATUS_LABEL[(record as Appointment).status] }}</a-tag>
+          <a-tag :color="STATUS_COLOR[(record as Appointment).status]">
+            {{ STATUS_LABEL[(record as Appointment).status] }}
+          </a-tag>
         </template>
         <template v-if="column.key === 'actions'">
           <a-space>
             <a-button type="link" size="small">详情</a-button>
             <a-button
               v-if="['pending','confirmed','paid'].includes((record as Appointment).status)"
-              type="link" danger size="small"
+              type="link"
+              danger
+              size="small"
               @click="handleCancel(record as Appointment)"
             >取消</a-button>
           </a-space>
         </template>
       </template>
     </a-table>
-  </div>
+  </a-card>
 </template>

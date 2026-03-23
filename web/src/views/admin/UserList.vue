@@ -124,16 +124,15 @@ function handleToggleStatus(record: UserInfo) {
 </script>
 
 <template>
-  <div>
-    <div class="mb-4 flex items-center gap-2">
-      <a-button type="primary" @click="openCreate">
-        新建用户
-      </a-button>
-      <a-button @click="fetchData">
-        刷新
-      </a-button>
-      <span class="ml-auto text-gray-500">共 {{ total }} 位用户</span>
-    </div>
+  <a-card class="list-card" :bordered="false">
+    <template #title>用户管理</template>
+    <template #extra>
+      <a-space>
+        <span class="text-muted" style="font-size:13px;">共 {{ total }} 位用户</span>
+        <a-button @click="fetchData">刷新</a-button>
+        <a-button type="primary" @click="openCreate">新建用户</a-button>
+      </a-space>
+    </template>
 
     <a-table
       :columns="columns"
@@ -202,5 +201,5 @@ function handleToggleStatus(record: UserInfo) {
         </a-form-item>
       </a-form>
     </a-modal>
-  </div>
+  </a-card>
 </template>

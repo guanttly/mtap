@@ -52,8 +52,18 @@ const columns = [
 </script>
 
 <template>
-  <div>
-    <a-table :columns="columns" :data-source="items" :loading="loading" :pagination="pagination" row-key="id" size="middle" @change="onTableChange">
+  <a-card class="list-card" :bordered="false">
+    <template #title>黑名单管理</template>
+
+    <a-table
+      :columns="columns"
+      :data-source="items"
+      :loading="loading"
+      :pagination="pagination"
+      row-key="id"
+      size="middle"
+      @change="onTableChange"
+    >
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'status'">
           <a-tag :color="(record as BlacklistRecord).status === 'active' ? 'red' : 'default'">
@@ -71,10 +81,10 @@ const columns = [
 
     <a-modal v-model:open="appealModal" title="提交申诉" :confirm-loading="appealing" @ok="submitAppeal">
       <a-form layout="vertical">
-        <a-form-item label="申诉理由">
+        <a-form-item label="申诉理由" required>
           <a-textarea v-model:value="appealReason" :rows="4" placeholder="请详细说明申诉理由..." />
         </a-form-item>
       </a-form>
     </a-modal>
-  </div>
+  </a-card>
 </template>

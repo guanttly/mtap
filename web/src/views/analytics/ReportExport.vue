@@ -60,10 +60,11 @@ const columns = [
 </script>
 
 <template>
-  <div>
-    <div class="action-bar">
+  <a-card class="list-card" :bordered="false">
+    <template #title>报表导出</template>
+    <template #extra>
       <a-button type="primary" @click="showModal = true">生成新报表</a-button>
-    </div>
+    </template>
     <a-table :columns="columns" :data-source="items" :loading="loading" :pagination="pagination" row-key="id" size="middle" @change="onTableChange">
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'status'">
@@ -99,5 +100,5 @@ const columns = [
         </a-form-item>
       </a-form>
     </a-modal>
-  </div>
+  </a-card>
 </template>

@@ -84,11 +84,14 @@ function handleDelete(record: DependencyRule) {
 </script>
 
 <template>
-  <div>
-    <div class="mb-4 flex items-center gap-2">
-      <a-button type="primary" @click="openCreate">新增依赖规则</a-button>
-      <a-button @click="fetchData">刷新</a-button>
-    </div>
+  <a-card class="list-card" :bordered="false">
+    <template #title>依赖规则</template>
+    <template #extra>
+      <a-space>
+        <a-button @click="fetchData">刷新</a-button>
+        <a-button type="primary" @click="openCreate">新增依赖规则</a-button>
+      </a-space>
+    </template>
     <a-table :columns="columns" :data-source="items" :loading="loading" :pagination="pagination" row-key="id" size="middle" @change="onTableChange">
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'actions'">
@@ -133,5 +136,5 @@ function handleDelete(record: DependencyRule) {
         </a-form-item>
       </a-form>
     </a-modal>
-  </div>
+  </a-card>
 </template>

@@ -124,22 +124,23 @@ function handleToggleStatus(record: SourceControl) {
 </script>
 
 <template>
-  <div>
-    <div class="action-bar mb-4 flex items-center gap-2">
-      <a-button type="primary" @click="openCreate">
-        新增来源控制
-      </a-button>
-      <a-button @click="fetchData">
-        刷新
-      </a-button>
-    </div>
+  <a-card class="list-card" :bordered="false">
+    <template #title>开单来源控制</template>
+    <template #extra>
+      <a-space>
+        <a-button @click="fetchData">刷新</a-button>
+        <a-button type="primary" @click="openCreate">新增来源控制</a-button>
+      </a-space>
+    </template>
 
-    <a-alert
-      type="info"
-      show-icon
-      message="开单来源控制：将不同开单来源（门诊/住院/转诊）的号源预约流量，按比例路由到指定号源池，并可设置溢出目标池。"
-      class="mb-4"
-    />
+    <div class="list-toolbar">
+      <a-alert
+        type="info"
+        show-icon
+        message="将不同开单来源（门诊/住院/转诊）的号源预约流量，按比例路由到指定号源池，并可设置溢出目标池。"
+        style="flex: 1;"
+      />
+    </div>
 
     <a-table
       :columns="columns"
@@ -220,5 +221,5 @@ function handleToggleStatus(record: SourceControl) {
         </a-form-item>
       </a-form>
     </a-modal>
-  </div>
+  </a-card>
 </template>

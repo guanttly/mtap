@@ -86,15 +86,14 @@ function handleDelete(record: ExamItem) {
 </script>
 
 <template>
-  <div>
-    <div class="action-bar mb-4 flex items-center gap-2">
-      <a-button type="primary" @click="openCreate">
-        新增检查项目
-      </a-button>
-      <a-button @click="fetchData">
-        刷新
-      </a-button>
-    </div>
+  <a-card class="list-card" :bordered="false">
+    <template #title>检查项目</template>
+    <template #extra>
+      <a-space>
+        <a-button @click="fetchData">刷新</a-button>
+        <a-button type="primary" @click="openCreate">新增检查项目</a-button>
+      </a-space>
+    </template>
 
     <a-table
       :columns="columns"
@@ -155,5 +154,5 @@ function handleDelete(record: ExamItem) {
         </a-form-item>
       </a-form>
     </a-modal>
-  </div>
+  </a-card>
 </template>

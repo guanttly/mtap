@@ -67,13 +67,14 @@ const columns = [
 </script>
 
 <template>
-  <div>
-    <div class="mb-4 flex items-center gap-2">
-      <a-button :loading="loading" @click="fetchData">
-        刷新
-      </a-button>
-      <span class="text-gray-400 text-sm">点击「管理别名」展开行内编辑</span>
-    </div>
+  <a-card class="list-card" :bordered="false">
+    <template #title>项目别名管理</template>
+    <template #extra>
+      <a-space>
+        <span class="text-muted" style="font-size:13px;">点击「管理别名」展开行内编辑</span>
+        <a-button :loading="loading" @click="fetchData">刷新</a-button>
+      </a-space>
+    </template>
 
     <a-table
       :columns="columns"
@@ -135,5 +136,5 @@ const columns = [
         </div>
       </template>
     </a-table>
-  </div>
+  </a-card>
 </template>

@@ -4,6 +4,13 @@
 import { h, ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import SvgIcon from '@/components/common/SvgIcon.vue'
+import type { IconName } from '@/assets/icons/index'
+
+/** 统一生成菜单图标渲染函数，使用本地 SVG 资源 */
+function icon(name: IconName) {
+  return () => h(SvgIcon, { name, size: '1em' })
+}
 
 const route = useRoute()
 const router = useRouter()
@@ -13,80 +20,80 @@ const collapsed = ref(false)
 const menuItems = computed(() => [
   {
     key: '/rule',
-    icon: () => h('span', { class: 'i-ant-design:apartment-outlined' }),
+    icon: icon('apartment-outlined'),
     label: '规则引擎',
     children: [
-      { key: '/rule/conflicts', label: '冲突规则' },
-      { key: '/rule/conflict-packages', label: '冲突包' },
-      { key: '/rule/dependencies', label: '依赖规则' },
-      { key: '/rule/priority-tags', label: '优先级标签' },
-      { key: '/rule/sorting-strategy', label: '排序策略' },
-      { key: '/rule/patient-adapt', label: '患者适配规则' },
-      { key: '/rule/source-controls', label: '来源控制' },
+      { key: '/rule/conflicts', icon: icon('interaction-outlined'), label: '冲突规则' },
+      { key: '/rule/conflict-packages', icon: icon('inbox-outlined'), label: '冲突包' },
+      { key: '/rule/dependencies', icon: icon('link-outlined'), label: '依赖规则' },
+      { key: '/rule/priority-tags', icon: icon('tag-outlined'), label: '优先级标签' },
+      { key: '/rule/sorting-strategy', icon: icon('sort-ascending-outlined'), label: '排序策略' },
+      { key: '/rule/patient-adapt', icon: icon('solution-outlined'), label: '患者适配规则' },
+      { key: '/rule/source-controls', icon: icon('control-outlined'), label: '来源控制' },
     ],
   },
   {
     key: '/resource',
-    icon: () => h('span', { class: 'i-ant-design:database-outlined' }),
+    icon: icon('database-outlined'),
     label: '资源管理',
     children: [
-      { key: '/resource/devices', label: '设备管理' },
-      { key: '/resource/exam-items', label: '检查项目' },
-      { key: '/resource/slot-pools', label: '号源池' },
-      { key: '/resource/schedules', label: '排班日历' },
-      { key: '/resource/item-aliases', label: '项目别名' },
+      { key: '/resource/devices', icon: icon('desktop-outlined'), label: '设备管理' },
+      { key: '/resource/exam-items', icon: icon('file-search-outlined'), label: '检查项目' },
+      { key: '/resource/slot-pools', icon: icon('number-outlined'), label: '号源池' },
+      { key: '/resource/schedules', icon: icon('schedule-outlined'), label: '排班日历' },
+      { key: '/resource/item-aliases', icon: icon('edit-outlined'), label: '项目别名' },
     ],
   },
   {
     key: '/appointment',
-    icon: () => h('span', { class: 'i-ant-design:calendar-outlined' }),
+    icon: icon('calendar-outlined'),
     label: '预约服务',
     children: [
-      { key: '/appointment/list', label: '预约列表' },
-      { key: '/appointment/auto', label: '智能预约' },
-      { key: '/appointment/combo', label: '套餐预约' },
-      { key: '/appointment/manual', label: '人工干预' },
-      { key: '/appointment/blacklist', label: '黑名单' },
+      { key: '/appointment/list', icon: icon('unordered-list-outlined'), label: '预约列表' },
+      { key: '/appointment/auto', icon: icon('robot-outlined'), label: '智能预约' },
+      { key: '/appointment/combo', icon: icon('shopping-outlined'), label: '套餐预约' },
+      { key: '/appointment/manual', icon: icon('tool-outlined'), label: '人工干预' },
+      { key: '/appointment/blacklist', icon: icon('stop-outlined'), label: '黑名单' },
     ],
   },
   {
     key: '/triage',
-    icon: () => h('span', { class: 'i-ant-design:team-outlined' }),
+    icon: icon('team-outlined'),
     label: '分诊叫号',
     children: [
-      { key: '/triage/checkin', label: '签到台' },
-      { key: '/triage/queue', label: '等候队列' },
-      { key: '/triage/call', label: '叫号台' },
-      { key: '/triage/screen', label: '大屏显示' },
+      { key: '/triage/checkin', icon: icon('check-circle-outlined'), label: '签到台' },
+      { key: '/triage/queue', icon: icon('ordered-list-outlined'), label: '等候队列' },
+      { key: '/triage/call', icon: icon('notification-outlined'), label: '叫号台' },
+      { key: '/triage/screen', icon: icon('fund-projection-screen-outlined'), label: '大屏显示' },
     ],
   },
   {
     key: '/analytics',
-    icon: () => h('span', { class: 'i-ant-design:bar-chart-outlined' }),
+    icon: icon('bar-chart-outlined'),
     label: '统计分析',
     children: [
-      { key: '/analytics/dashboard', label: '数据看板' },
-      { key: '/analytics/report', label: '报表导出' },
+      { key: '/analytics/dashboard', icon: icon('dashboard-outlined'), label: '数据看板' },
+      { key: '/analytics/report', icon: icon('file-excel-outlined'), label: '报表导出' },
     ],
   },
   {
     key: '/optimization',
-    icon: () => h('span', { class: 'i-ant-design:thunderbolt-outlined' }),
+    icon: icon('thunderbolt-outlined'),
     label: '效能优化',
     children: [
-      { key: '/optimization/metrics', label: '效率指标' },
-      { key: '/optimization/alerts', label: '瓶颈告警' },
-      { key: '/optimization/strategies', label: '优化策略' },
-      { key: '/optimization/scans', label: '周期扫描' },
+      { key: '/optimization/metrics', icon: icon('rise-outlined'), label: '效率指标' },
+      { key: '/optimization/alerts', icon: icon('alert-outlined'), label: '瓶颈告警' },
+      { key: '/optimization/strategies', icon: icon('bulb-outlined'), label: '优化策略' },
+      { key: '/optimization/scans', icon: icon('scan-outlined'), label: '周期扫描' },
     ],
   },
   {
     key: '/admin',
-    icon: () => h('span', { class: 'i-ant-design:setting-outlined' }),
+    icon: icon('setting-outlined'),
     label: '系统管理',
     children: [
-      { key: '/admin/users', label: '用户管理' },
-      { key: '/admin/roles', label: '角色管理' },
+      { key: '/admin/users', icon: icon('user-outlined'), label: '用户管理' },
+      { key: '/admin/roles', icon: icon('idcard-outlined'), label: '角色管理' },
     ],
   },
 ])

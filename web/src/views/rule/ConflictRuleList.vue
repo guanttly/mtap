@@ -4,14 +4,35 @@
 import { h, onMounted, ref } from 'vue'
 import { message, Modal } from 'ant-design-vue'
 import { ruleApi } from '@/api/rule'
+import { resourceApi } from '@/api/resource'
 import { usePagination } from '@/composables/usePagination'
 import type { ConflictRule } from '@/types/rule'
+import type { ExamItem } from '@/types/resource'
 
 const { loading, items, pagination, fetchData, onTableChange } = usePagination<ConflictRule>(
   params => ruleApi.listConflictRules(params),
 )
 
-onMounted(() => fetchData())
+const examItems = ref<ExamItem[]>([])
+const examItemsLoading = ref(false)
+
+async function loadExamItems() {
+  examItemsLoading.value = true
+  try {
+    const res = await resourceApi.listExamItems({ page: 1, page_size: 500 })
+    examItems.value = res.items ?? []
+  }
+  finally { examItemsLoading.value = false }
+}
+
+function filterExamOption(input: string, option: { label: string }) {
+  return option.label.toLowerCase().includes(input.toLowerCase())
+}
+
+onMounted(() => {
+  fetchData()
+  loadExamItems()
+})
 
 const showModal = ref(false)
 const saving = ref(false)
@@ -99,15 +120,14 @@ function handleDelete(record: ConflictRule) {
 </script>
 
 <template>
-  <div>
-    <div class="mb-4 flex items-center gap-2">
-      <a-button type="primary" @click="openCreate">
-        新增冲突规则
-      </a-button>
-      <a-button @click="fetchData">
-        刷新
-      </a-button>
-    </div>
+  <a-card class="list-card" :bordered="false">
+    <template #title>冲突规则</template>
+    <template #extra>
+      <a-space>
+        <a-button @click="fetchData">刷新</a-button>
+        <a-button type="primary" @click="openCreate">新增冲突规则</a-button>
+      </a-space>
+    </template>
     <a-table
       :columns="columns"
       :data-source="items"
@@ -138,11 +158,25 @@ function handleDelete(record: ConflictRule) {
     >
       <a-form :model="editForm" layout="vertical">
         <template v-if="!isEdit">
-          <a-form-item label="检查项A ID" required>
-            <a-input v-model:value="editForm.item_a_id" placeholder="请输入检查项A的ID" />
+          <a-form-item label="检查项A" required>
+            <a-select
+              v-model:value="editForm.item_a_id"
+              show-search
+              placeholder="请搜索或选择检查项A"
+              :loading="examItemsLoading"
+              :filter-option="filterExamOption"
+              :options="examItems.map(i => ({ value: i.id, label: i.name }))"
+            />
           </a-form-item>
-          <a-form-item label="检查项B ID" required>
-            <a-input v-model:value="editForm.item_b_id" placeholder="请输入检查项B的ID" />
+          <a-form-item label="检查项B" required>
+            <a-select
+              v-model:value="editForm.item_b_id"
+              show-search
+              placeholder="请搜索或选择检查项B"
+              :loading="examItemsLoading"
+              :filter-option="filterExamOption"
+              :options="examItems.map(i => ({ value: i.id, label: i.name }))"
+            />
           </a-form-item>
         </template>
         <a-form-item label="最短间隔">
@@ -166,5 +200,5 @@ function handleDelete(record: ConflictRule) {
         </a-form-item>
       </a-form>
     </a-modal>
-  </div>
+  </a-card>
 </template>

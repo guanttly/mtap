@@ -1,31 +1,159 @@
 /* 核心目的：全局样式 */
 /* 模块功能：CSS Reset、全局变量、字体引入 */
-/* CSS Reset */
+
+/* ===================== CSS Reset ===================== */
 *, *::before, *::after { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 14px; color: #1f2328; background: #f0f2f5; }
+html, body {
+  margin: 0; padding: 0; height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: 14px; color: #1f2328; background: #f0f2f5;
+}
 #app { height: 100%; }
 
-/* 滚动条 */
+/* ===================== 滚动条 ===================== */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #d9d9d9; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #bfbfbf; }
 
-/* Ant Design 覆盖 */
-.ant-layout { background: #f0f2f5; }
-.ant-card { border-radius: 8px; }
-.ant-table-wrapper .ant-table { font-size: 13px; }
-.ant-btn { border-radius: 6px; }
-.ant-input, .ant-select-selector { border-radius: 6px !important; }
+/* ===================== Ant Design 覆盖 ===================== */
 
-/* 通用工具类 */
-.page-container { padding: 16px; min-height: 100%; }
-.search-bar { background: #fff; padding: 16px; border-radius: 8px; margin-bottom: 16px; }
-.action-bar { margin-bottom: 12px; display: flex; gap: 8px; align-items: center; }
+/* 布局 */
+.ant-layout { background: #f0f2f5; }
+.ant-layout-header { height: 56px !important; line-height: 56px !important; }
+
+/* 卡片 */
+.ant-card {
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 1px 6px -1px rgba(0,0,0,.04);
+  border: 1px solid #f0f0f0;
+}
+.ant-card-head {
+  border-bottom: 1px solid #f5f5f5;
+  min-height: 46px;
+  padding: 0 20px;
+}
+.ant-card-head-title { font-size: 14px; font-weight: 600; color: #262626; }
+.ant-card-body { padding: 20px; }
+.ant-card-extra { padding: 12px 0; }
+
+/* 表格 */
+.ant-table-wrapper .ant-table { font-size: 13px; }
+.ant-table-wrapper .ant-table-thead > tr > th {
+  background: #fafafa !important;
+  font-weight: 600;
+  font-size: 13px;
+  color: #595959;
+  border-bottom: 1px solid #f0f0f0 !important;
+  padding: 10px 16px;
+}
+.ant-table-wrapper .ant-table-tbody > tr > td {
+  padding: 10px 16px;
+  border-bottom: 1px solid #f8f8f8 !important;
+  color: #434343;
+}
+.ant-table-wrapper .ant-table-tbody > tr:hover > td { background: #f0f7ff !important; }
+.ant-table-wrapper .ant-table-pagination { padding: 12px 16px !important; margin: 0 !important; border-top: 1px solid #f0f0f0; }
+
+/* 按钮 */
+.ant-btn { border-radius: 6px; font-size: 13px; display: inline-flex; align-items: center; gap: 4px; }
+.ant-btn-primary { box-shadow: 0 2px 4px rgba(24,144,255,.25); }
+.ant-btn-primary:hover { box-shadow: 0 4px 8px rgba(24,144,255,.35); }
+
+/* 输入框、选择器 */
+.ant-input, .ant-input-affix-wrapper, .ant-select-selector, .ant-picker { border-radius: 6px !important; transition: border-color .2s, box-shadow .2s; }
+.ant-input:focus, .ant-input-focused, .ant-input-affix-wrapper:focus, .ant-input-affix-wrapper-focused { box-shadow: 0 0 0 2px rgba(24,144,255,.12) !important; }
+.ant-input-search .ant-input-search-button { border-radius: 0 6px 6px 0 !important; }
+
+/* 表单 */
+.ant-form-item-label > label { font-size: 13px; color: #595959; font-weight: 500; }
+.ant-form-item { margin-bottom: 20px; }
+
+/* Steps - 修复连接线颜色 */
+.ant-steps-item-process .ant-steps-item-icon {
+  background: #1677ff;
+  box-shadow: 0 0 0 4px rgba(22,119,255,.15);
+}
+.ant-steps-item-tail::after { background-color: #e8e8e8 !important; }
+.ant-steps-item-finish .ant-steps-item-tail::after { background-color: #1677ff !important; }
+
+/* Tag */
+.ant-tag { border-radius: 4px; font-size: 12px; font-weight: 500; }
+
+/* Badge */
+.ant-badge-status-text { font-size: 13px; }
+
+/* Modal */
+.ant-modal-content { border-radius: 10px; overflow: hidden; }
+.ant-modal-header { border-bottom: 1px solid #f0f0f0; padding: 14px 20px; }
+.ant-modal-title { font-size: 15px; font-weight: 600; }
+.ant-modal-body { padding: 20px; }
+.ant-modal-footer { border-top: 1px solid #f0f0f0; padding: 12px 20px; }
+
+/* Descriptions */
+.ant-descriptions-item-label { font-weight: 500; color: #595959; background: #fafafa; }
+.ant-descriptions-bordered .ant-descriptions-item-label { padding: 8px 14px; }
+.ant-descriptions-bordered .ant-descriptions-item-content { padding: 8px 14px; }
+
+/* Alert */
+.ant-alert { border-radius: 6px; }
+
+/* Select dropdown */
+.ant-select-item { font-size: 13px; }
+
+/* Statistic */
+.ant-statistic-title { font-size: 13px; color: #8c8c8c; margin-bottom: 6px; }
+.ant-statistic-content { font-size: 24px; font-weight: 600; }
+
+/* ===================== 页面布局 ===================== */
+
+/* 页面容器 */
+.page-container { padding: 20px 24px; min-height: 100%; }
+
+/* ---- 列表页卡片 ---- */
+/* 列表页统一使用 list-card，表格直接嵌入，无内边距 */
+.list-card { }
+.list-card .ant-card-body { padding: 0; }
+.list-card .ant-table-wrapper .ant-table-thead > tr > th:first-child,
+.list-card .ant-table-wrapper .ant-table-tbody > tr > td:first-child { padding-left: 20px; }
+.list-card .ant-table-wrapper .ant-table-thead > tr > th:last-child,
+.list-card .ant-table-wrapper .ant-table-tbody > tr > td:last-child { padding-right: 20px; }
+
+/* 列表页工具栏（搜索/筛选，紧贴表格上方） */
+.list-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 14px 20px;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+/* ---- 表单/操作页 ---- */
+.form-page-card { }
+.form-section { margin-bottom: 0; }
+.form-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #595959;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f5f5f5;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+
+/* 帮助说明卡片内列表样式 */
+.help-card ul, .help-card ol { padding-left: 20px; margin: 0; color: #595959; line-height: 2; }
+.help-card li { font-size: 13px; }
+
+/* ===================== 工具类 ===================== */
 .text-muted { color: #8c8c8c; }
 .text-danger { color: #ff4d4f; }
 .text-success { color: #52c41a; }
 .text-warning { color: #faad14; }
+.text-primary { color: #1677ff; }
 .flex-1 { flex: 1; }
 .overflow-hidden { overflow: hidden; }
 .cursor-pointer { cursor: pointer; }
+.w-full { width: 100%; }
